@@ -1,4 +1,4 @@
-// License: GPL-3.0. For details, see Readme.txt file.
+// License: GPL-3.0. For details, see README.md file.
 
 package org.jroadsign.quebec.montreal.src;
 

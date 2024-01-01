@@ -1,3 +1,5 @@
+// License: GPL-3.0. For details, see README.md file.
+
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import java.util.*;
