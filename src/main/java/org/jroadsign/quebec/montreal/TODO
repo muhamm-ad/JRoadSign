@@ -1,0 +1,6 @@
+- [ ] Refactor RpaSignDescriptionParser class for improved readability and maintainability. Break down the class into
+    smaller classes (`RoadSignDescription` and `RoadSignDescriptionMatcher`) each with their specific roles to adhere
+    better to the Single Responsibility Principle.
+    This is expected to improve code maintainability, testing, and readability.
+
+- [ ]
