@@ -4,6 +4,7 @@ package org.jroadsign.quebec.montreal.src;
 
 import org.jroadsign.common.Coordinate;
 import org.jroadsign.quebec.montreal.src.rpasign.RpaSign;
+import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescription;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -82,9 +83,12 @@ public class MontrealRoadPostSignsGeojsonReader {
         long signId = properties.getLong("PANNEAU_ID_PAN");
 
         long signIdRpa = properties.getLong("PANNEAU_ID_RPA");
-        String signDescriptionRpa = properties.optString("DESCRIPTION_RPA", null);
+        RpaSignDescription rpaSignDescription =
+                new RpaSignDescription(properties.optString("DESCRIPTION_RPA", null));
         String signCodeRpa = properties.optString("CODE_RPA", null);
-        RpaSign signRpaSign = new RpaSign(signIdRpa, signDescriptionRpa, signCodeRpa);
+
+
+        RpaSign signRpa = new RpaSign(signIdRpa, rpaSignDescription, signCodeRpa);
 
         int signArrowCode = properties.getInt("FLECHE_PAN");
         String signToponymic = properties.optString("TOPONYME_PAN", null);
@@ -99,7 +103,7 @@ public class MontrealRoadPostSignsGeojsonReader {
 
         String signRepDescription = properties.optString("DESCRIPTION_REP", null);
 
-        RoadSign roadSign = new RoadSign(signPosition, signId, signRpaSign, signArrowCode,
+        RoadSign roadSign = new RoadSign(signPosition, signId, signRpa, signArrowCode,
                 signToponymic, signCategoryDescription, signRepDescription);
         signs.put(signId, roadSign);
 

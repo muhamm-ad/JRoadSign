@@ -6,81 +6,77 @@ import org.jroadsign.quebec.montreal.src.rpasign.RpaSign;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescriptionParser;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedMap;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 public class Main {
-
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final String FILTERED_FILE = "src/main/resources/quebec/montreal/input/Filtered_TypeS_RoadSign.geojson";
+    private static final File OUTPUT_DIR = new File("src/main/resources/quebec/montreal/output");
 
-    private static final String FILTERED_FILE =
-            "src/main/resources/quebec/montreal/input/Filtered_TypeS_RoadSign.geojson";
-
-    public static void testSpliter() {
-
-        MontrealRoadPostSignsGeojsonReader montrealRoadPostSignsGeojsonReader = new MontrealRoadPostSignsGeojsonReader(FILTERED_FILE);
-
-        SortedMap<Long, RoadSign> signs = montrealRoadPostSignsGeojsonReader.getSigns();
-        System.out.println(signs.size());
-
-        File dir = new File("src/main/resources/quebec/montreal/output");
-        if (!dir.exists()) {
-            dir.mkdir();
-        }
-
-        try (
-                // Create the output files
-                BufferedWriter writer =
-                        new BufferedWriter(new FileWriter(new File(dir, "RpaSignDesc.txt")));
-
-                BufferedWriter writer_durationInMinutes =
-                        new BufferedWriter(new FileWriter(new File(dir, "RpaSignDesc_durationMinutes.txt")));
-                BufferedWriter writer_dayHours =
-                        new BufferedWriter(new FileWriter(new File(dir, "RpaSignDesc_dailyTimeRange.txt")));
-                BufferedWriter writer_weekdays =
-                        new BufferedWriter(new FileWriter(new File(dir, "RpaSignDesc_weeklyDayRange.txt")));
-                BufferedWriter writer_months =
-                        new BufferedWriter(new FileWriter(new File(dir, "RpaSignDesc_annualMonthRange.txt")));
-                BufferedWriter writer_additionalMetaData =
-                        new BufferedWriter(new FileWriter(new File(dir, "RpaSignDesc_additionalInfo.txt")));
-
-        ) {
-            for (RoadSign s : signs.values()) {
-                RpaSign rpaSign = s.getRpaSign();
-                RpaSignDescriptionParser rpaSignDes = new RpaSignDescriptionParser(rpaSign.descriptionRpaSign());
-                writer.write(String.valueOf(rpaSignDes) + "\n");
-
-                if (rpaSignDes.getDurationMinutes() != null && !rpaSignDes.getDurationMinutes().isEmpty())
-                    writer_durationInMinutes.write(rpaSignDes.getDurationMinutes() + "\n");
-                if (rpaSignDes.getDailyTimeRange() != null && !rpaSignDes.getDailyTimeRange().isEmpty())
-                    writer_dayHours.write(rpaSignDes.getDailyTimeRange() + "\n");
-                if (rpaSignDes.getWeeklyDayRange() != null && !rpaSignDes.getWeeklyDayRange().isEmpty())
-                    writer_weekdays.write(rpaSignDes.getWeeklyDayRange() + "\n");
-                if (rpaSignDes.getAnnualMonthRange() != null && !rpaSignDes.getAnnualMonthRange().isEmpty())
-                    writer_months.write(rpaSignDes.getAnnualMonthRange() + "\n");
-                if (rpaSignDes.getAdditionalInfo() != null && !rpaSignDes.getAdditionalInfo().isEmpty())
-                    writer_additionalMetaData.write(rpaSignDes.getAdditionalInfo() + "\n");
-            }
-
-        } catch (IOException e) {
-            LOGGER.severe("Error writing to output file: " + e.getMessage());
-        }
+    private static SortedMap<Long, RoadSign> prepareRoadSignData() {
+        MontrealRoadPostSignsGeojsonReader montrealRoadPostSignsGeojsonReader =
+                new MontrealRoadPostSignsGeojsonReader(FILTERED_FILE);
+        SortedMap<Long, RoadSign> roadSigns = montrealRoadPostSignsGeojsonReader.getSigns();
+        System.out.println(roadSigns.size());
+        return roadSigns;
     }
 
-    public static void main(String[] args) throws Exception {
-        testSpliter();
+    public static void getFilesRpaSignDescription(SortedMap<Long, RoadSign> roadSigns) {
+        // Create a map of writers and their corresponding getters from RpaSignDescriptionParser
+        Map<BufferedWriter, Function<RpaSignDescriptionParser, String>> writersWithGetters = new HashMap<>();
+        try {
+            BufferedWriter writer =
+                    new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc.txt")));
+            BufferedWriter writer_durationInMinutes =
+                    new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_durationMinutes.txt")));
+            BufferedWriter writer_dayHours =
+                    new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_dailyTimeRange.txt")));
+            BufferedWriter writer_weekdays =
+                    new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_weeklyDayRange.txt")));
+            BufferedWriter writer_months =
+                    new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_annualMonthRange.txt")));
+            BufferedWriter writer_additionalMetaData =
+                    new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo.txt")));
 
-        // Define script path and arguments
-        String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
-        String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc*.txt";
+            writersWithGetters.put(writer, RpaSignDescriptionParser::toString);
+            writersWithGetters.put(writer_durationInMinutes, RpaSignDescriptionParser::getDurationMinutes);
+            writersWithGetters.put(writer_dayHours, RpaSignDescriptionParser::getDailyTimeRange);
+            writersWithGetters.put(writer_weekdays, RpaSignDescriptionParser::getWeeklyDayRange);
+            writersWithGetters.put(writer_months, RpaSignDescriptionParser::getAnnualMonthRange);
+            writersWithGetters.put(writer_additionalMetaData, RpaSignDescriptionParser::getAdditionalInfo);
 
-        // Execute the script with arguments
-        executeScript(scriptPath, targetFiles);
+            for (RoadSign s : roadSigns.values()) {
+                RpaSign rpaSign = s.getRpaSign();
+                RpaSignDescriptionParser rpaSignDes =
+                        new RpaSignDescriptionParser(rpaSign.descriptionRpaSign().getStringDescription());
+                writer.write(String.valueOf(rpaSignDes) + "\n");
+
+                for (Map.Entry<BufferedWriter, Function<RpaSignDescriptionParser, String>> entry : writersWithGetters.entrySet()) {
+                    BufferedWriter writerCurrent = entry.getKey();
+                    String description = entry.getValue().apply(rpaSignDes);
+                    if (description != null && !description.isEmpty())
+                        writerCurrent.write(description + "\n");
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.severe("Error writing to output file: " + e.getMessage());
+        } finally {
+            writersWithGetters.forEach((writer, getter) -> {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    LOGGER.severe("Error closing file writer: " + e.getMessage());
+                }
+            });
+        }
     }
 
     private static void executeScript(String scriptPath, String var1) {
         ProcessBuilder processBuilder = new ProcessBuilder(scriptPath, var1);
-
         processBuilder.redirectErrorStream(true);  // Optionally redirect error stream to standard output
 
         try {
@@ -96,6 +92,46 @@ public class Main {
         } catch (IOException | InterruptedException e) {
             LOGGER.severe("Error executing script: " + e.getMessage());
         }
+    }
+
+    private static void debugRpaSignDescription(SortedMap<Long, RoadSign> roadSigns) {
+        getFilesRpaSignDescription(roadSigns);
+
+        // Define script path and arguments
+        String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
+        String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc*.txt";
+
+        // Execute the script with arguments
+        executeScript(scriptPath, targetFiles);
+    }
+
+    private static void debugRoadSign(SortedMap<Long, RoadSign> roadSigns) {
+        try (
+                BufferedWriter writerRoadSigns =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RoadSigns.txt")));
+                BufferedWriter writerRpaSigns =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSigns.txt")));
+        ) {
+            for (RoadSign s : roadSigns.values()) {
+                writerRoadSigns.write(s + "\n");
+                RpaSign rpaSign = s.getRpaSign();
+                writerRpaSigns.write(rpaSign + "\n");
+            }
+        } catch (IOException e) {
+            LOGGER.severe("Error writing to output file: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+
+        if (!OUTPUT_DIR.exists()) {
+            OUTPUT_DIR.mkdir();
+        }
+
+        SortedMap<Long, RoadSign> roadSigns = prepareRoadSignData();
+
+        debugRpaSignDescription(roadSigns);
+        debugRoadSign(roadSigns);
     }
 
 }

@@ -51,6 +51,7 @@ public class RoadSign implements Comparable<RoadSign> {
     private final String categoryDescription; // Description of the category of the RoadSign // UPDATE
     private final BufferedImage image = null;
     private RepDescription repDescription; // Description of the REP (Regulation Explanation Panel) of the RoadSign
+
     public RoadSign(int position, long id, RpaSign rpaSign, int arrowCode, String toponymic,
                     String categoryDescription, String repDescription) {
         this.position = position;
@@ -148,7 +149,7 @@ public class RoadSign implements Comparable<RoadSign> {
         return "RoadSign{" +
                 "id=" + id +
                 ", position=" + position +
-                ", rpa=" + rpaSign +
+                ", " + rpaSign +
                 ", arrowCode=" + arrowCode + "(" + getArrowStrDirrection() + ")" +
                 ", toponymic='" + toponymic + '\'' +
                 ", categoryDescription='" + categoryDescription + '\'' +
