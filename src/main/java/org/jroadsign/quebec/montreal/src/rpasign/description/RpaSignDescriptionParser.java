@@ -42,18 +42,33 @@ public class RpaSignDescriptionParser {
                     + "|" +
                     MONTH_NAME_PATTERN + "\\s*(1ER|\\d{1,2})?\\s*(A(U)?|ET|-|À)\\s*" + MONTH_NAME_PATTERN + "\\s*(1ER|\\d{1,2})?)\\b";
     private static final Map<String, String> weekdayAbbreviations = new HashMap<>();
-
     static {
-        weekdayAbbreviations.put("DIMANCHE", "DIM");
-        weekdayAbbreviations.put("LUNDI", "LUN");
-        weekdayAbbreviations.put("MARDI", "MAR");
-        weekdayAbbreviations.put("MERCREDI", "MER");
-        weekdayAbbreviations.put("JEUDI", "JEU");
-        weekdayAbbreviations.put("VENDREDI", "VEN");
-        weekdayAbbreviations.put("SAMEDI", "SAM");
+        weekdayAbbreviations.put("LUNDI", GlobalConfig.MONDAY);
+        weekdayAbbreviations.put("MARDI", GlobalConfig.TUESDAY);
+        weekdayAbbreviations.put("MERCREDI", GlobalConfig.WEDNESDAY);
+        weekdayAbbreviations.put("JEUDI", GlobalConfig.THURSDAY);
+        weekdayAbbreviations.put("VENDREDI", GlobalConfig.FRIDAY);
+        weekdayAbbreviations.put("SAMEDI", GlobalConfig.SATURDAY);
+        weekdayAbbreviations.put("DIMANCHE", GlobalConfig.SUNDAY);
     }
 
     private static final Map<String, String> monthAbbreviations = new HashMap<>();
+
+    static {
+        monthAbbreviations.put("JAN(?:V(?:IER)?)?", GlobalConfig.JANUARY);
+        monthAbbreviations.put("F(?:É|E)V(?:RIER)?", GlobalConfig.FEBRUARY);
+        //monthAbbreviations.put("MARS", GlobalConfig.MARCH);
+        monthAbbreviations.put("AVR(?:IL)?", GlobalConfig.APRIL);
+        //monthAbbreviations.put("MAI", GlobalConfig.MAY);
+        //monthAbbreviations.put("JUIN?", GlobalConfig.JUNE);
+        monthAbbreviations.put("JUIL(?:LET)?", GlobalConfig.JULY);
+        //monthAbbreviations.put("AOUT", GlobalConfig.AUGUST);
+        monthAbbreviations.put("SEPT(?:EMBRE)?", GlobalConfig.SEPTEMBER);
+        monthAbbreviations.put("OCT(?:OBRE)?", GlobalConfig.OCTOBER);
+        monthAbbreviations.put("NOV(?:EMBRE)?", GlobalConfig.NOVEMBER);
+        monthAbbreviations.put("D(?:É|E)C(?:EMBRE)?", GlobalConfig.DECEMBER);
+    }
+
     private static final List<String> LIST_OF_METADATA_TO_IGNORE =
             new ArrayList<>(Arrays.asList("STAT INT", "TEMPS", "NO PARKING", "NON CONFORME"));
 
@@ -78,19 +93,6 @@ public class RpaSignDescriptionParser {
         extractInformations(description);
     }
 
-    static {
-        monthAbbreviations.put("JAN(?:V(?:IER)?)?", "JAN");
-        monthAbbreviations.put("F(?:É|E)V(?:RIER)?", "FEV");
-        // monthAbbreviations.put("MARS", "MAR");
-        monthAbbreviations.put("AVR(?:IL)?", "AVR");
-        // monthAbbreviations.put("JUIN?", "JUN");
-        monthAbbreviations.put("JUIL(?:LET)?", "JUIL");
-        // monthAbbreviations.put("AOUT", "AOU");
-        monthAbbreviations.put("SEPT(?:EMBRE)?", "SEP");
-        monthAbbreviations.put("OCT(?:OBRE)?", "OCT");
-        monthAbbreviations.put("NOV(?:EMBRE)?", "NOV");
-        monthAbbreviations.put("D(?:É|E)C(?:EMBRE)?", "DEC");
-    }
 
     /**
      * Function to extract matches from a description using a given matcher
@@ -347,7 +349,9 @@ public class RpaSignDescriptionParser {
         dailyTimeRange = dailyTimeRange
                 .replaceAll("À", "-")
                 .replaceAll("A", "-")
-                .replaceAll("\\s+", "");
+                .replaceAll("\\s+", "")
+                .replaceAll("24H", "00H")
+                .trim();
     }
 
     private void standardizeWeeklyDayRange() {
@@ -361,7 +365,8 @@ public class RpaSignDescriptionParser {
             weeklyDayRange = weeklyDayRange
                     .replaceAll(entry.getKey(), " " + abbreviation + " ")
                     .replaceAll("(\\b" + abbreviation + ")(AU|À|ET|-)", "$1 $2")
-                    .replaceAll("(AU|À|ET|-)(\\b" + abbreviation + ")", "$1 $2");
+                    .replaceAll("(AU|À|ET|-)(\\b" + abbreviation + ")", "$1 $2")
+                    .trim();
         }
 
         // Normalize spacing and handle special cases like ranges and combinations
@@ -375,7 +380,8 @@ public class RpaSignDescriptionParser {
                 .replaceAll("É", "E")
                 .replaceAll("'", " ").trim()
                 .replaceAll("\\s+", "_")
-                .replaceAll("\\bJOURS_D_ECOLE\\b", "JOURS_D_ECOLES");
+                .replaceAll("\\bJOURS_D_ECOLE\\b", "JOURS_D_ECOLES")
+                .trim();
     }
 
     private String standardizeAnnualMonthRangePattern(String range) {
@@ -429,7 +435,9 @@ public class RpaSignDescriptionParser {
                 .replaceAll("\\sÀ\\s", " - ")
                 .replaceAll("-", " - ")
                 .replaceAll("\\sET\\s", " - ") // REVIEW
-                .replaceAll("\\s+", " ");
+                .replaceAll("\\s*;\\s*", ";")
+                .replaceAll("\\s+", " ")
+                .trim();
     }
 
     /**
@@ -455,6 +463,6 @@ public class RpaSignDescriptionParser {
 
         if (LIST_OF_METADATA_TO_IGNORE.contains(cleanedDescription)) cleanedDescription = "";
 
-        additionalInfo = cleanedDescription;
+        additionalInfo = cleanedDescription.trim();
     }
 }

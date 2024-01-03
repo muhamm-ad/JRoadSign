@@ -6,15 +6,10 @@ import java.time.DayOfWeek;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class WeeklyDays {
-    private static final String WEEKDAY_PATTERN =
-            "((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?)" +
-                    "(;((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?))*;*";
-    private static final Pattern COMPILED_WEEKDAY_PATTERN = Pattern.compile(WEEKDAY_PATTERN);
     private static final String MSG_ERR_INVALID_FORMAT_S_ARG =
-            "Invalid WeeklyDays format: %s. Expected format: " +
+            "Invalid WeeklyDays format: `%s`. Expected format: " +
                     "[Day Abbreviation] or [Day Abbreviation]-[Day Abbreviation]";
     private static final String MSG_ERR_UNKNOWN_DAY_ABR = "Unknown day abbreviation: %s";
 
@@ -25,35 +20,40 @@ public class WeeklyDays {
     }
 
     public WeeklyDays(String sWeeklyDays) {
-        Matcher matcher = COMPILED_WEEKDAY_PATTERN.matcher(sWeeklyDays);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException(MSG_ERR_INVALID_FORMAT_S_ARG + sWeeklyDays);
-        }
-        this.days = EnumSet.noneOf(DayOfWeek.class);
+        Matcher matcher = GlobalConfig.COMPILED_WEEKDAY_PATTERN.matcher(sWeeklyDays);
+        if (!matcher.matches())
+            throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sWeeklyDays));
 
+
+        this.days = EnumSet.noneOf(DayOfWeek.class);
         String[] elements = sWeeklyDays.split(";");
 
         for (String element : elements) {
-            if (element.contains("-")) {
-                handleInterval(element);
-            } else {
-                handleDay(element);
+            try {
+                if (element.contains("-"))
+                    handleInterval(element);
+                else
+                    handleDay(element);
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                WeekRangeExpression expression = WeekRangeExpression.fromString(element);
+                if (expression != null)
+                    initializeFromExpression(expression);
+                else
+                    throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sWeeklyDays));
+
             }
         }
     }
 
     public WeeklyDays(WeekRangeExpression expression) {
+        initializeFromExpression(expression);
+    }
+
+    private void initializeFromExpression(WeekRangeExpression expression) {
         switch (expression) {
             case ALL_TIMES -> this.days = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SUNDAY);
             case SCHOOL_DAYS -> this.days = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.FRIDAY);
             case WEEK_END -> this.days = EnumSet.range(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
-            case EXCEPTE_LUN -> this.days = EnumSet.complementOf(EnumSet.of(DayOfWeek.MONDAY));
-            case EXCEPTE_MAR -> this.days = EnumSet.complementOf(EnumSet.of(DayOfWeek.TUESDAY));
-            case EXCEPTE_MER -> this.days = EnumSet.complementOf(EnumSet.of(DayOfWeek.WEDNESDAY));
-            case EXCEPTE_JEU -> this.days = EnumSet.complementOf(EnumSet.of(DayOfWeek.THURSDAY));
-            case EXCEPTE_VEN -> this.days = EnumSet.complementOf(EnumSet.of(DayOfWeek.FRIDAY));
-            case EXCEPTE_SAM -> this.days = EnumSet.complementOf(EnumSet.of(DayOfWeek.SATURDAY));
-            case EXCEPTE_DIM -> this.days = EnumSet.complementOf(EnumSet.of(DayOfWeek.SUNDAY));
             default -> throw new IllegalStateException("Unknown expression: " + expression);
         }
     }
@@ -83,11 +83,10 @@ public class WeeklyDays {
         return "WeeklyDays{" + days + '}';
     }
 
-
     private void handleInterval(String interval) {
         String[] daysInterval = interval.split("-");
-        DayOfWeek start = convertToDayOfWeek(daysInterval[0].trim());
-        DayOfWeek end = convertToDayOfWeek(daysInterval[1].trim());
+        DayOfWeek start = GlobalFunction.convertToDayOfWeek(daysInterval[0].trim());
+        DayOfWeek end = GlobalFunction.convertToDayOfWeek(daysInterval[1].trim());
 
         if (start == null || end == null) {
             throw new IllegalArgumentException(
@@ -103,28 +102,13 @@ public class WeeklyDays {
     }
 
     private void handleDay(String dayStr) {
-        DayOfWeek day = convertToDayOfWeek(dayStr);
+        DayOfWeek day = GlobalFunction.convertToDayOfWeek(dayStr);
         if (day == null) {
             throw new IllegalArgumentException(
                     String.format(MSG_ERR_UNKNOWN_DAY_ABR, dayStr));
         }
         this.days.add(day);
     }
-
-    private DayOfWeek convertToDayOfWeek(String sDayAbbr) {
-        return switch (sDayAbbr) {
-            case "LUN" -> DayOfWeek.MONDAY;
-            case "MAR" -> DayOfWeek.TUESDAY;
-            case "MER" -> DayOfWeek.WEDNESDAY;
-            case "JEU" -> DayOfWeek.THURSDAY;
-            case "VEN" -> DayOfWeek.FRIDAY;
-            case "SAM" -> DayOfWeek.SATURDAY;
-            case "DIM" -> DayOfWeek.SUNDAY;
-            default -> throw new IllegalStateException("Unknown day abbreviation: " + sDayAbbr);
-
-        };
-    }
-
 
 }
 

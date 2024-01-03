@@ -3,16 +3,9 @@
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 public enum WeekRangeExpression {
-    ALL_TIMES("EN_TOUT_TEMPS"),
-    SCHOOL_DAYS("JOURS_D_ECOLES", "JOURS_DE_CLASSE"),
-    WEEK_END("WEEK_END"),
-    EXCEPTE_LUN("SAUF_LUN", "SAUF_LUNDI"),
-    EXCEPTE_MAR("SAUF_MAR", "SAUF_MARDI"),
-    EXCEPTE_MER("SAUF_MER", "SAUF_MERCREDI"),
-    EXCEPTE_JEU("SAUF_JEU", "SAUF_JEUDI"),
-    EXCEPTE_VEN("SAUF_VEN", "SAUF_VENDREDI"),
-    EXCEPTE_SAM("SAUF_SAM", "SAUF_SAMEDI"),
-    EXCEPTE_DIM("SAUF_DIM", "SAUF_DIMANCHE");
+    ALL_TIMES(GlobalConfig.ALL_TIMES),
+    SCHOOL_DAYS(GlobalConfig.SCHOOL_DAYS, GlobalConfig.CLASS_DAYS),
+    WEEK_END(GlobalConfig.WEEK_END);
 
     private final String[] descriptions;
 
