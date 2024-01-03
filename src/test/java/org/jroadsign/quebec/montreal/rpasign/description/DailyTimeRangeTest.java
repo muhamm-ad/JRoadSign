@@ -33,6 +33,13 @@ public class DailyTimeRangeTest {
         assertThrows(IllegalArgumentException.class, () -> new DailyTimeRange("14H 00-15 H00 "));
     }
 
+    private void assertValidRange(String input, LocalTime expectedStart, LocalTime expectedEnd, Duration expectedDuration) {
+        DailyTimeRange dailyTimeRange = new DailyTimeRange(input);
+        assertEquals(expectedStart, dailyTimeRange.getStart());
+        assertEquals(expectedEnd, dailyTimeRange.getEnd());
+        assertEquals(expectedDuration, dailyTimeRange.getDuration());
+    }
+
     @Test
     public void whenValidInput_thenCorrectlyParseTimeRange() {
         assertValidRange("05H30-10H00", LocalTime.of(5, 30), LocalTime.of(10, 0), Duration.ofHours(4).plusMinutes(30));
@@ -62,13 +69,6 @@ public class DailyTimeRangeTest {
         dailyTimeRange = new DailyTimeRange("20H-21H");
         assertTrue(dailyTimeRange.isWithinRange(LocalTime.of(20, 59)));
         assertFalse(dailyTimeRange.isWithinRange(LocalTime.of(21, 1)));
-    }
-
-    private void assertValidRange(String input, LocalTime expectedStart, LocalTime expectedEnd, Duration expectedDuration) {
-        DailyTimeRange dailyTimeRange = new DailyTimeRange(input);
-        assertEquals(expectedStart, dailyTimeRange.getStart());
-        assertEquals(expectedEnd, dailyTimeRange.getEnd());
-        assertEquals(expectedDuration, dailyTimeRange.getDuration());
     }
 
     @Test

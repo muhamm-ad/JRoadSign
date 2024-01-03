@@ -4,11 +4,13 @@ package org.jroadsign.quebec.montreal.rpasign.description;
 
 import junit.framework.TestCase;
 import org.jroadsign.quebec.montreal.src.rpasign.description.WeekRangeExpression;
+import org.junit.Test;
 
 import java.util.Arrays;
 
 public class WeekRangeExpressionTest extends TestCase {
 
+    @Test
     public void testFromStringValidInputs() {
         assertEquals(WeekRangeExpression.ALL_TIMES, WeekRangeExpression.fromString("EN_TOUT_TEMPS"));
         assertEquals(WeekRangeExpression.SCHOOL_DAYS, WeekRangeExpression.fromString("JOURS_DE_CLASSE"));
@@ -18,6 +20,7 @@ public class WeekRangeExpressionTest extends TestCase {
         // TODO Add more valid input tests for each enum value
     }
 
+    @Test
     public void testFromStringInvalidInput() {
         assertNull(WeekRangeExpression.fromString("INVALID STRING"));
         assertNull(WeekRangeExpression.fromString(""));
@@ -25,6 +28,7 @@ public class WeekRangeExpressionTest extends TestCase {
         assertNull(WeekRangeExpression.fromString(null));
     }
 
+    @Test
     public void testGetDescriptions() {
         String[] expectedDescriptions = {"SAUF_LUN", "SAUF_LUNDI"};
         System.out.println(WeekRangeExpression.EXCEPTE_LUN.getDescriptions());
