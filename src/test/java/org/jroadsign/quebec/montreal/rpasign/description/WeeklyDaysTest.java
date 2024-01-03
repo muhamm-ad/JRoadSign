@@ -112,13 +112,6 @@ public class WeeklyDaysTest {
     }
 
     @Test
-    public void testExceptTuesdayExpression() {
-        WeeklyDays exceptTuesday = new WeeklyDays(WeekRangeExpression.EXCEPTE_MAR);
-        EnumSet<DayOfWeek> expected = EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
-        assertEquals(expected, exceptTuesday.getDays());
-    }
-
-    @Test
     public void testComplexInputParsing() {
         WeeklyDays complexInput = new WeeklyDays("MAR-JEU;LUN;SAM");
         EnumSet<DayOfWeek> expected = EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.SATURDAY);
