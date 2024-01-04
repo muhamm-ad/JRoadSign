@@ -17,7 +17,7 @@ public class DailyTimeRange {
     private LocalTime start;
     private LocalTime end;
 
-    public DailyTimeRange(String sDailyTimeRange) {
+    public DailyTimeRange(String sDailyTimeRange) throws StartAfterEndException {
         Matcher matcher = GlobalConfig.COMPILED_DAY_TIME_RANGE_PATTERN.matcher(sDailyTimeRange);
         if (!matcher.find())
             throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sDailyTimeRange));
@@ -28,13 +28,17 @@ public class DailyTimeRange {
         validateAndSetRange(pStart, pEnd);
     }
 
-    public DailyTimeRange(LocalTime start, LocalTime end) {
+    public DailyTimeRange(LocalTime start, LocalTime end) throws StartAfterEndException {
         validateAndSetRange(start, end);
     }
 
-    private void validateAndSetRange(LocalTime start, LocalTime end) {
-        /*if (start.isAfter(end))
-            throw new IllegalArgumentException(String.format(MSG_ERR_START_AFTER_END, start, end));*/
+    private void validateRange(LocalTime start, LocalTime end) throws StartAfterEndException {
+        if (start.isAfter(end))
+            throw new StartAfterEndException(String.format(MSG_ERR_START_AFTER_END, start, end));
+    }
+
+    private void validateAndSetRange(LocalTime start, LocalTime end) throws StartAfterEndException {
+        validateRange(start, end);
         this.start = start;
         this.end = end;
     }
@@ -58,15 +62,13 @@ public class DailyTimeRange {
         return this.end;
     }
 
-    public void setStart(LocalTime start) {
-        /*if (start.isAfter(this.end))
-            throw new IllegalArgumentException(String.format(MSG_ERR_START_AFTER_END, start, this.end));*/
+    public void setStart(LocalTime start) throws StartAfterEndException {
+        validateRange(start, this.end);
         this.start = start;
     }
 
-    public void setEnd(LocalTime end) {
-        /*if (end.isBefore(this.start))
-            throw new IllegalArgumentException(String.format(MSG_ERR_START_AFTER_END, this.start, end));*/
+    public void setEnd(LocalTime end) throws StartAfterEndException {
+        validateRange(this.start, end);
         this.end = end;
     }
 
