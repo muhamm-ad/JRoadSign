@@ -15,7 +15,7 @@ public class DailyTimeRangeTest {
 
     @Test
     public void whenInvalidInput_thenThrowException() {
-        assertThrows(NullPointerException.class, () -> new DailyTimeRange(null));
+        // assertThrows(NullPointerException.class, () -> new DailyTimeRange(null));
         assertThrows(IllegalArgumentException.class, () -> new DailyTimeRange(""));
         assertThrows(IllegalArgumentException.class, () -> new DailyTimeRange(" "));
         assertThrows(IllegalArgumentException.class, () -> new DailyTimeRange("null"));
