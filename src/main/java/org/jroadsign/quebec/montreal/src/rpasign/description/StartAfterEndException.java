@@ -1,23 +1,24 @@
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 public class StartAfterEndException extends Exception {
-    // Constructor that accepts a message
+
+    private Range<?> range;
+
+    public StartAfterEndException(String message, Range<?> range) {
+        super(message);
+        this.range = range;
+    }
+
     public StartAfterEndException(String message) {
         super(message);
     }
 
-    // Constructor that accepts a message and a cause
-    public StartAfterEndException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    // Constructor that accepts a cause
-    public StartAfterEndException(Throwable cause) {
-        super(cause);
-    }
-
-    // Optional: Constructor without arguments
     public StartAfterEndException() {
         super();
     }
+
+    public Range<?> getRange() {
+        return range;
+    }
+
 }

@@ -9,13 +9,12 @@ import java.util.regex.Matcher;
 
 public class DailyTimeRange {
 
-    private static final String MSG_ERR_INVALID_FORMAT_S_ARG =
+    public static final String MSG_ERR_INVALID_FORMAT_S_ARG =
             "Invalid DailyTimeRange format: %s. Expected format: " + GlobalConfig.DAY_TIME_RANGE_PATTERN;
-    private static final String MSG_ERR_START_AFTER_END =
+    public static final String MSG_ERR_START_AFTER_END =
             "Start time `%s` is after end time `%s`. DailyTimeRange should be within the same day.";
 
-    private LocalTime start;
-    private LocalTime end;
+    private Range<LocalTime> range;
 
     public DailyTimeRange(String sDailyTimeRange) throws StartAfterEndException {
         Matcher matcher = GlobalConfig.COMPILED_DAY_TIME_RANGE_PATTERN.matcher(sDailyTimeRange);
@@ -28,19 +27,19 @@ public class DailyTimeRange {
         validateAndSetRange(pStart, pEnd);
     }
 
-    public DailyTimeRange(LocalTime start, LocalTime end) throws StartAfterEndException {
-        validateAndSetRange(start, end);
+    public DailyTimeRange(Range<LocalTime> oRange) throws StartAfterEndException {
+        validateAndSetRange(oRange.getStart(), oRange.getEnd());
     }
 
     private void validateRange(LocalTime start, LocalTime end) throws StartAfterEndException {
         if (start.isAfter(end))
-            throw new StartAfterEndException(String.format(MSG_ERR_START_AFTER_END, start, end));
+            throw new StartAfterEndException(
+                    String.format(MSG_ERR_START_AFTER_END, start, end), new Range<LocalTime>(start, end));
     }
 
     private void validateAndSetRange(LocalTime start, LocalTime end) throws StartAfterEndException {
         validateRange(start, end);
-        this.start = start;
-        this.end = end;
+        range = new Range<>(start, end);
     }
 
     private LocalTime parseTime(String sHour, String sMinute) {
@@ -54,37 +53,42 @@ public class DailyTimeRange {
         }
     }
 
-    public LocalTime getStart() {
-        return this.start;
+    public Range<LocalTime> getRange() {
+        return range;
     }
 
-    public LocalTime getEnd() {
-        return this.end;
+    public void setRange(Range<LocalTime> range) {
+        this.range = range;
+    }
+
+    public LocalTime getStart() {
+        return range.getStart();
     }
 
     public void setStart(LocalTime start) throws StartAfterEndException {
-        validateRange(start, this.end);
-        this.start = start;
+        validateRange(start, range.getEnd());
+        range.setStart(start);
+    }
+
+    public LocalTime getEnd() {
+        return range.getEnd();
     }
 
     public void setEnd(LocalTime end) throws StartAfterEndException {
-        validateRange(this.start, end);
-        this.end = end;
+        validateRange(range.getStart(), end);
+        range.setEnd(end);
     }
 
     public Duration getDuration() {
-        return Duration.between(this.start, this.end);
+        return Duration.between(range.getStart(), range.getEnd());
     }
 
     public boolean isWithinRange(LocalTime time) {
-        return (time.equals(this.start) || time.isAfter(this.start)) && time.isBefore(this.end);
+        return (time.equals(range.getStart()) || time.isAfter(range.getStart())) && time.isBefore(range.getEnd());
     }
 
     @Override
     public String toString() {
-        return "DailyTimeRange{" +
-                "start=" + start +
-                ", end=" + end +
-                '}';
+        return "DailyTimeRange" + range;
     }
 }

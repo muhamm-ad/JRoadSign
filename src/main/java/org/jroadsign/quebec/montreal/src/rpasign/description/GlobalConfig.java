@@ -38,13 +38,13 @@ public class GlobalConfig {
     public static final String SUNDAY = "DIM";
     public static final String WEEKDAY_EXPRESSION_PATTERN =
             "(" + ALL_TIMES + "|" + SCHOOL_DAYS + "|" + CLASS_DAYS + "|" + WEEK_END + ")";
+    public static final String WEEKDAY_PATTERN =
+            "((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?)" +
+                    "(;((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?))*;*";
     public static final Pattern COMPILED_WEEKDAY_PATTERN = Pattern.compile(
             "((" + WEEKDAY_PATTERN + ")|(" + WEEKDAY_EXPRESSION_PATTERN + "))" +
                     "(;((" + WEEKDAY_PATTERN + ")|(" + WEEKDAY_EXPRESSION_PATTERN + ")))*"
     );
-    public static final String WEEKDAY_PATTERN =
-            "((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?)" +
-                    "(;((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?))*;*";
     /**
      * {@link AnnualMonthRange}
      **/

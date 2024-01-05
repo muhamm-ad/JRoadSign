@@ -28,7 +28,7 @@ public class Main {
     public static void getFilesRpaSignDescription(SortedMap<Long, RoadSign> roadSigns) {
         // Create a map of writers and their corresponding getters from RpaSignDescriptionParser
         Map<BufferedWriter, Function<RpaSignDescriptionParser, String>> writersWithGetters = new HashMap<>();
-        try {
+        try (
             BufferedWriter writer =
                     new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc.txt")));
             BufferedWriter writer_durationInMinutes =
@@ -41,7 +41,7 @@ public class Main {
                     new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_annualMonthRange.txt")));
             BufferedWriter writer_additionalMetaData =
                     new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo.txt")));
-
+        ) {
             writersWithGetters.put(writer, RpaSignDescriptionParser::toString);
             writersWithGetters.put(writer_durationInMinutes, RpaSignDescriptionParser::getDurationMinutes);
             writersWithGetters.put(writer_dayHours, RpaSignDescriptionParser::getDailyTimeRange);
