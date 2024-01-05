@@ -9,12 +9,12 @@ import java.util.Collections;
 import java.util.List;
 
 public class RpaSignDescription {
-    String additionalMetaData;
     private String stringDescription;
     private List<DurationMinutes> durationMinutesList;
     private List<DailyTimeRange> dailyTimeRangeList;
     private WeeklyDays weeklyDays; // REVIEW
     private List<AnnualMonthRange> annualMonthRangeList;
+    String additionalMetaData;
 
 
     public RpaSignDescription(String sDescription) {
@@ -125,10 +125,11 @@ public class RpaSignDescription {
     @Override
     public String toString() {
         return "RpaSignDescription{" +
-                "durationMinutesList=" + durationMinutesList +
+                "stringDescription='" + stringDescription + '\'' +
+                ", durationMinutesList=" + durationMinutesList +
                 ", dailyTimeRangeList=" + dailyTimeRangeList +
                 ", weeklyDays=" + weeklyDays +
-                ", annualMonthRange=" + annualMonthRangeList +
+                ", annualMonthRangeList=" + annualMonthRangeList +
                 ", additionalMetaData='" + additionalMetaData + '\'' +
                 '}';
     }

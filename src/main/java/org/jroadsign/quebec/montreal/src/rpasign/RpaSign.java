@@ -13,7 +13,7 @@ public record RpaSign(long idRpaSign, RpaSignDescription descriptionRpaSign, Str
     public String toString() {
         return "RpaSign{" +
                 "idRpaSign=" + idRpaSign +
-                ", " + descriptionRpaSign + '\'' +
+                ", descriptionRpaSign=" + descriptionRpaSign +
                 ", codeRpaSign='" + codeRpaSign + '\'' +
                 '}';
     }
