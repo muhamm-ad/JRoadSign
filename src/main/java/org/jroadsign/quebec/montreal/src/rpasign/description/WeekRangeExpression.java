@@ -4,6 +4,7 @@ package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 public enum WeekRangeExpression {
     ALL_TIMES(GlobalConfig.ALL_TIMES),
+    ALL_TIMES_EXCEPT(GlobalConfig.ALL_TIMES_EXCEPT),
     SCHOOL_DAYS(GlobalConfig.SCHOOL_DAYS, GlobalConfig.CLASS_DAYS),
     WEEK_END(GlobalConfig.WEEK_END);
 

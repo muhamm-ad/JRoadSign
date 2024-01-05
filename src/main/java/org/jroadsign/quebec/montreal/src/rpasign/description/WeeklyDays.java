@@ -20,33 +20,54 @@ public class WeeklyDays {
     }
 
     public WeeklyDays(String sWeeklyDays) {
-        Matcher matcher = GlobalConfig.COMPILED_WEEKDAY_PATTERN.matcher(sWeeklyDays);
-        if (!matcher.matches())
-            throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sWeeklyDays));
-
+        validateStringInput(sWeeklyDays);
 
         this.days = EnumSet.noneOf(DayOfWeek.class);
         String[] elements = sWeeklyDays.split(";");
 
-        for (String element : elements) {
-            try {
-                if (element.contains("-"))
-                    handleInterval(element);
-                else
-                    handleDay(element);
-            } catch (IllegalArgumentException | IllegalStateException e) {
-                WeekRangeExpression expression = WeekRangeExpression.fromString(element);
-                if (expression != null)
-                    initializeFromExpression(expression);
-                else
-                    throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sWeeklyDays));
-
-            }
+        if (processElements(elements)) {
+            initializeFromExpression(WeekRangeExpression.ALL_TIMES_EXCEPT);
         }
     }
 
     public WeeklyDays(WeekRangeExpression expression) {
+        this.days = EnumSet.noneOf(DayOfWeek.class);
         initializeFromExpression(expression);
+    }
+
+    private void validateStringInput(String input) {
+        Matcher matcher = GlobalConfig.COMPILED_WEEKDAY_PATTERN.matcher(input);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, input));
+        }
+    }
+
+    private boolean processElements(String[] elements) {
+        boolean isAllTimeExcept = false;
+        for (String element : elements) {
+            if (element.equalsIgnoreCase(GlobalConfig.ALL_TIMES_EXCEPT)) {
+                isAllTimeExcept = true;
+            } else {
+                processElement(element);
+            }
+        }
+        return isAllTimeExcept;
+    }
+
+    private void processElement(String element) {
+        try {
+            if (element.contains("-"))
+                handleInterval(element);
+            else
+                handleDay(element);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            WeekRangeExpression expression = WeekRangeExpression.fromString(element);
+            if (expression != null) {
+                initializeFromExpression(expression);
+            } else {
+                throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, element));
+            }
+        }
     }
 
     private void initializeFromExpression(WeekRangeExpression expression) {
@@ -54,6 +75,11 @@ public class WeeklyDays {
             case ALL_TIMES -> this.days = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SUNDAY);
             case SCHOOL_DAYS -> this.days = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.FRIDAY);
             case WEEK_END -> this.days = EnumSet.range(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
+            case ALL_TIMES_EXCEPT -> {
+                EnumSet<DayOfWeek> allDays = EnumSet.allOf(DayOfWeek.class);
+                allDays.removeAll(this.days);
+                this.days = allDays; // Set 'this.days' to be the remaining days
+            }
             default -> throw new IllegalStateException("Unknown expression: " + expression);
         }
     }

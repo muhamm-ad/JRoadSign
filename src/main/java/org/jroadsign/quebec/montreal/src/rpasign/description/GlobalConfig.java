@@ -26,6 +26,7 @@ public class GlobalConfig {
      **/
 
     public static final String ALL_TIMES = "EN_TOUT_TEMPS";
+    public static final String ALL_TIMES_EXCEPT = "EN_TOUT_TEMPS_EXCEPTE";
     public static final String SCHOOL_DAYS = "JOURS_D_ECOLES";
     public static final String CLASS_DAYS = "JOURS_DE_CLASSE";
     public static final String WEEK_END = "WEEK_END";
@@ -37,7 +38,7 @@ public class GlobalConfig {
     public static final String SATURDAY = "SAM";
     public static final String SUNDAY = "DIM";
     public static final String WEEKDAY_EXPRESSION_PATTERN =
-            "(" + ALL_TIMES + "|" + SCHOOL_DAYS + "|" + CLASS_DAYS + "|" + WEEK_END + ")";
+            "(" + ALL_TIMES + "|" + ALL_TIMES_EXCEPT + "|" + SCHOOL_DAYS + "|" + CLASS_DAYS + "|" + WEEK_END + ")";
     public static final String WEEKDAY_PATTERN =
             "((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?)" +
                     "(;((LUN|MAR|MER|JEU|VEN|SAM|DIM)(-(LUN|MAR|MER|JEU|VEN|SAM|DIM))?))*;*";
