@@ -129,11 +129,7 @@ public class WeeklyDays {
 
     private void handleDay(String dayStr) {
         DayOfWeek day = GlobalFunction.convertToDayOfWeek(dayStr);
-        if (day == null) {
-            throw new IllegalArgumentException(
-                    String.format(MSG_ERR_UNKNOWN_DAY_ABR, dayStr));
-        }
-        this.days.add(day);
+        days.add(day);
     }
 
 }

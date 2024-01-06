@@ -14,34 +14,58 @@ import java.util.regex.Pattern;
  */
 public class RpaSignDescriptionParser {
 
-    // Define a regex pattern to capture parking duration in minutes
-    // This will match patterns like "15 MIN", "100 MIN", etc.
+    /******************************************** Duration *********************************************
+     /* Define a regex pattern to capture parking duration in minutes
+     /* This will match patterns like "15 MIN", "100 MIN", etc.
+     /**************************************************************************************************/
     private static final String DURATION_PATTERN = "\\b\\d+\\s*MIN\\b";
-    // Define a regex pattern to capture a time range
-    // This will match patterns like "10 H 30 À 12 H 30", "9 H - 10 H", "8 H À 9 H", etc.
+
+
+    /******************************************** Time Range *******************************************
+     /* Define a regex pattern to capture a time range
+     /* This will match patterns like "10 H 30 A 12 H 30", "9 H - 10 H", "8 H A 9 H", etc.
+     /**************************************************************************************************/
     private static final String TIME_PATTERN = "\\s*(\\d{1,2})\\s*H\\s*(\\d{0,2})?\\s*";
-    private static final String DAY_TIME_RANGE_PATTERN = "\\b" + TIME_PATTERN + "(-|À|A)" + TIME_PATTERN + "\\b";
-    // Define a regex pattern to capture a day range
-    // This will match patterns like "LUN AU VEN", "MAR À JEU", "DIM - SAM", etc.
+    private static final String DAY_TIME_RANGE_PATTERN = "\\b" + TIME_PATTERN + "\\s*(AU?|-)\\s*" + TIME_PATTERN + "\\b";
+
+
+    /******************************************** Day Range ********************************************
+     /* Define a regex pattern to capture a day range
+     /* This will match patterns like "LUN AU VEN", "MAR A JEU", "DIM - SAM", etc
+     /**************************************************************************************************/
     private static final String WEEKDAY_PATTERN =
             "(LUN(?:DI)?|MAR(?:DI)?|MER(?:CREDI)?|JEU(?:DI)?|VEN(?:DREDI)?|SAM(?:EDI)?|DIM(?:ANCHE)?)";
-
+    private static final String SCHOOL_DAYS_PATTERN = "JOURS\\s+D'ECOLES?";
+    private static final String CLASS_DAYS_PATTERN = "JOURS\\s+DE?\\s+CLASSE";
+    private static final String ALWAYS_PATTERN = "EN\\s+TOUT\\s+TEMPS(?:\\s+EXCEPTE)?";
     private static final String WEEKDAY_EXPRESSION_PATTERN =
-            "(JOURS\\s+D'(E|É)COLES?|JOURS\\s+DE?\\s+CLASSE|EN\\s+TOUT\\s+TEMPS)";
+            "(" + SCHOOL_DAYS_PATTERN + "|" + CLASS_DAYS_PATTERN + "|" + ALWAYS_PATTERN + ")";
     private static final String WEEKLY_DAY_RANGE_PATTERN =
-            "\\b(" + WEEKDAY_PATTERN + "\\s*(A(U)?|-|À)\\s*" + WEEKDAY_PATTERN +
-                    "|" + WEEKDAY_PATTERN + "(\\s*ET\\s*" + WEEKDAY_PATTERN + ")*" +
-                    "|" + WEEKDAY_EXPRESSION_PATTERN + ")\\b";
-    // Define a regex pattern to capture a year range
-    // This will match patterns like "1 JAN AU 1 DEC", "JAN AU DEC", "1ER FEV - 1ER NOV", etc.
-    private static final String MONTH_NAME_PATTERN =
-            "(JAN(?:V(?:IER)?)?|F(?:É|E)V(?:RIER)?|MARS|AVR(?:IL)?|MAI|JUIN|" +
-                    "JUIL(?:LET)?|AOUT|SEPT(?:EMBRE)?|OCT(?:OBRE)?|NOV(?:EMBRE)?|D(?:É|E)C(?:EMBRE)?)";
-    private static final String ANNUAL_MONTH_RANGE_PATTERN =
-            "\\b((1ER|\\d{1,2})?\\s*" + MONTH_NAME_PATTERN + "\\s*(A(U)?|ET|-|À)\\s*" + "(1ER|\\d{1,2})?\\s*" + MONTH_NAME_PATTERN
-                    + "|" +
-                    MONTH_NAME_PATTERN + "\\s*(1ER|\\d{1,2})?\\s*(A(U)?|ET|-|À)\\s*" + MONTH_NAME_PATTERN + "\\s*(1ER|\\d{1,2})?)\\b";
+            "\\b(" + WEEKDAY_PATTERN + "(\\s*(AU?|-|ET)\\s*" + WEEKDAY_PATTERN + ")*"
+                    + "|" + WEEKDAY_EXPRESSION_PATTERN + ")\\b";
     private static final Map<String, String> weekdayAbbreviations = new HashMap<>();
+    /******************************************* Year Range *******************************************
+     /* Define a regex pattern to capture a year range
+     /* This will match patterns like "1 JAN AU 1 DEC", "JAN AU DEC", "1ER FEV - 1ER NOV", etc.
+     /*************************************************************************************************/
+    private static final String MONTH_NAME_PATTERN =
+            "(JAN(?:V(?:IER)?)?|FEV(?:RIER)?|MARS|AVR(?:IL)?|MAI|JUIN|" +
+                    "JUIL(?:LET)?|AOUT|SEPT(?:EMBRE)?|OCT(?:OBRE)?|NOV(?:EMBRE)?|DEC(?:EMBRE)?)";
+    private static final String ANNUAL_MONTH_RANGE_PATTERN_PRIM =
+            "(1ER|\\d{1,2})?\\s*" + MONTH_NAME_PATTERN
+                    + "\\s*(A(U)?|ET|-)\\s*"
+                    + "(1ER|\\d{1,2})?\\s*" + MONTH_NAME_PATTERN;
+    private static final String ANNUAL_MONTH_RANGE_PATTERN_SECOND =
+            MONTH_NAME_PATTERN + "\\s*(1ER|\\d{1,2})?"
+                    + "\\s*(A(U)?|ET|-)\\s*"
+                    + MONTH_NAME_PATTERN + "\\s*(1ER|\\d{1,2})?";
+    private static final String ANNUAL_MONTH_RANGE_PATTERN =
+            "\\b(" + ANNUAL_MONTH_RANGE_PATTERN_PRIM + "|" + ANNUAL_MONTH_RANGE_PATTERN_SECOND + ")\\b";
+    /******************************************* Other variables *******************************************/
+    private static final List<String> LIST_OF_METADATA_TO_IGNORE =
+            new ArrayList<>(Arrays.asList("STAT INT", "STAT INT DE", "TEMPS", "NO PARKING", "NON CONFORME"));
+    private static final Map<String, String> monthAbbreviations = new HashMap<>();
+
     static {
         weekdayAbbreviations.put("LUNDI", GlobalConfig.MONDAY);
         weekdayAbbreviations.put("MARDI", GlobalConfig.TUESDAY);
@@ -52,11 +76,9 @@ public class RpaSignDescriptionParser {
         weekdayAbbreviations.put("DIMANCHE", GlobalConfig.SUNDAY);
     }
 
-    private static final Map<String, String> monthAbbreviations = new HashMap<>();
-
     static {
         monthAbbreviations.put("JAN(?:V(?:IER)?)?", GlobalConfig.JANUARY);
-        monthAbbreviations.put("F(?:É|E)V(?:RIER)?", GlobalConfig.FEBRUARY);
+        monthAbbreviations.put("FEV(?:RIER)?", GlobalConfig.FEBRUARY);
         //monthAbbreviations.put("MARS", GlobalConfig.MARCH);
         monthAbbreviations.put("AVR(?:IL)?", GlobalConfig.APRIL);
         //monthAbbreviations.put("MAI", GlobalConfig.MAY);
@@ -66,12 +88,8 @@ public class RpaSignDescriptionParser {
         monthAbbreviations.put("SEPT(?:EMBRE)?", GlobalConfig.SEPTEMBER);
         monthAbbreviations.put("OCT(?:OBRE)?", GlobalConfig.OCTOBER);
         monthAbbreviations.put("NOV(?:EMBRE)?", GlobalConfig.NOVEMBER);
-        monthAbbreviations.put("D(?:É|E)C(?:EMBRE)?", GlobalConfig.DECEMBER);
+        monthAbbreviations.put("DEC(?:EMBRE)?", GlobalConfig.DECEMBER);
     }
-
-    private static final List<String> LIST_OF_METADATA_TO_IGNORE =
-            new ArrayList<>(Arrays.asList("STAT INT", "TEMPS", "NO PARKING", "NON CONFORME"));
-
 
     private String durationMinutes;
     private String dailyTimeRange;
@@ -170,7 +188,6 @@ public class RpaSignDescriptionParser {
         description = extractMatches(description, parkingDurationMatcher, match -> durationMinutes = appendToExisting(durationMinutes, match));
         description = extractMatches(description, dailyTimeRangeMatcher, match -> dailyTimeRange = appendToExisting(dailyTimeRange, match));
         description = extractMatches(description, weeklyDayRangeMatcher, match -> weeklyDayRange = appendToExisting(weeklyDayRange, match));
-        /*description = extractMatches(description, annualMonthRangeMatcher, match -> annualMonthRangeMatcher = appendMatch(annualMonthRange, match));*/
         while (annualMonthRangeMatcher.find()) {
             String match = annualMonthRangeMatcher.group();
             this.annualMonthRange = (this.getAnnualMonthRange() == null ? "" : this.annualMonthRange + "; ") + match;
@@ -197,20 +214,20 @@ public class RpaSignDescriptionParser {
     }
 
     /**
-     * This method reformats day-hour string in the description.
-     * It is used to fix intervals like "SAM 17H À LUN 17H".
+     * This method reformats time range string in the description.
+     * It is used to fix intervals like "SAM 17H A LUN 17H".
      *
      * @param description The original description.
      * @return The description with day-hour string reformatted.
      */
     private String reformatDailyTimeIntervals(String description) {
 
-        // FIXME fix intervals like SAM 17H À LUN 17H
+        // FIXME fix intervals like SAM 17H A LUN 17H
 
-        // Define a regex pattern for "DAY HOUR À DAY HOUR"
+        // Define a regex pattern for "DAY HOUR A DAY HOUR"
         String dayHourRegex =
-                WEEKDAY_PATTERN + TIME_PATTERN + "\\s*À\\s*" + WEEKDAY_PATTERN + TIME_PATTERN +
-                        "|" + TIME_PATTERN + WEEKDAY_PATTERN + "\\s*À\\s*" + TIME_PATTERN + WEEKDAY_PATTERN;
+                WEEKDAY_PATTERN + TIME_PATTERN + "\\s*A\\s*" + WEEKDAY_PATTERN + TIME_PATTERN +
+                        "|" + TIME_PATTERN + WEEKDAY_PATTERN + "\\s*A\\s*" + TIME_PATTERN + WEEKDAY_PATTERN;
         // TODO ensure that the day_pattern_1 is different to the the day_pattern_2
         // TODO if its the same day_pattern avoid repetition in the description
 
@@ -221,7 +238,7 @@ public class RpaSignDescriptionParser {
         while (dayHourMatcher.find()) {
             String match = dayHourMatcher.group();
 
-            String[] intervalParts = match.split(" À | A ");
+            String[] intervalParts = match.split(" A ");
             // Trim the strings before further processing
             intervalParts[0] = intervalParts[0].trim();
             intervalParts[1] = intervalParts[1].trim();
@@ -240,7 +257,8 @@ public class RpaSignDescriptionParser {
                 endParts = new String[]{intervalParts[1].split(" ")[1], intervalParts[1].split(" ")[0]};
             }
 
-            String reformattedMatch = startParts[1] + " À 00H " + startParts[0] + " - " + "00H À " + endParts[1] + " " + endParts[0];
+            String reformattedMatch = startParts[1] + " A 00H " + startParts[0]
+                    + " - " + "00H A " + endParts[1] + " " + endParts[0];
 
             // Replace the original match with the reformatted match in the description
             description = description.replaceFirst(dayHourRegex, reformattedMatch);
@@ -250,17 +268,17 @@ public class RpaSignDescriptionParser {
     }
 
     /**
-     * This method corrects misspelled month names in the description.
+     * This method corrects misspelled names in the description.
      *
      * @param description The original description.
-     * @return The description with corrected month names.
+     * @return The description with corrected names.
      */
-    private String correctMonthSpelling(String description) {
-        return description.replace("AVIL", "AVRIL")
-                .replace("AVRILS", "AVRIL")
-                .replace("MRS", "MARS")
-                .replace("MARSL", "MARS")
-                .replace("VEMDREDI", "VENDREDI");
+    private String correctSpelling(String description) {
+        return description.replace("AVIL", GlobalConfig.APRIL)
+                .replace("AVRILS", GlobalConfig.APRIL)
+                .replace("MRS", GlobalConfig.MARCH)
+                .replace("MARSL", GlobalConfig.MARCH)
+                .replace("VEMDREDI", GlobalConfig.FRIDAY);
     }
 
     /**
@@ -304,9 +322,8 @@ public class RpaSignDescriptionParser {
 
     /**
      * This method cleans up the description string before processing.
-     * It normalizes the string to upper case, removes possible prefixes,
-     * extra spaces, unwanted characters, misspellings, and adds spaces
-     * between letters and numbers if required.
+     * It normalizes the string to upper case, removes possible prefixes, extra spaces, unwanted characters,
+     * misspellings, and adds spaces between letters and numbers if required.
      *
      * @param description The original description to be cleaned.
      * @return A cleaned version of the original description.
@@ -315,45 +332,89 @@ public class RpaSignDescriptionParser {
         String cleanedDescription = description.toUpperCase().trim();
 
         // Remove possible prefixes (for road sign S type only)
-        if (cleanedDescription.startsWith("\\P") || cleanedDescription.startsWith("/P")) {
-            cleanedDescription = cleanedDescription.substring(2); // REVIEW
-        }
+        cleanedDescription = cleanedDescription
+                .replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
+                .replace("\\P", "")
+                .replace("/P", "")
+                .replaceAll("\\s+", " "); // remove extra spaces
 
-        cleanedDescription = cleanedDescription.replaceAll("\\s+", " "); // remove extra spaces
-
-        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
 
         // Remove unwanted characters and misspellings
-        cleanedDescription = cleanedDescription.replace(".", "").
-                replace(",", "");
-        cleanedDescription = correctMonthSpelling(cleanedDescription);
+        cleanedDescription = cleanedDescription
+                .replace(".", "")
+                .replace(",", "")
+                .replaceAll("É", "E")
+                .replaceAll("È", "E")
+                .replaceAll("À", "A");
 
+        // Reformat day time range
+        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
+
+        cleanedDescription = correctSpelling(cleanedDescription);
         // Add space between a letter and a number if there isn't one
         cleanedDescription = insertSpaceBetweenLetterAndNumber(cleanedDescription);
-
         // Add space between day number and month abbreviation if necessary
         cleanedDescription = insertSpaceBetweenDayAndMonth(cleanedDescription);
 
         return cleanedDescription;
     }
 
+    /**
+     * This method standardizes the duration minutes in the description.
+     * It removes leading and trailing spaces from the duration minutes field
+     * and replaces multiple spaces with a single space.
+     */
     private void standardizeDurationMinutes() {
         if (durationMinutes != null)
             durationMinutes = durationMinutes.trim().replaceAll("\\s+", " ");
     }
 
+    /**
+     * This method standardizes the daily time range in the description.
+     * It replaces certain expressions with standardized format and removes unnecessary characters and spaces.
+     */
     private void standardizeDailyTimeRange() {
         if (dailyTimeRange == null)
             return;
 
         dailyTimeRange = dailyTimeRange
-                .replaceAll("À", "-")
                 .replaceAll("A", "-")
                 .replaceAll("\\s+", "")
                 .replaceAll("24H", "00H")
+                // .replaceAll("H", ":") // TODO
                 .trim();
     }
 
+
+    /**
+     * Splits a weekly day range string into individual days or ranges of days.
+     *
+     * @param weeklyDayRange The weekly day range string to be split.
+     * @return The split string, where individual days or ranges of days are separated by semicolons.
+     */
+    private String standardizeWeeklyDayRangePattern(String weeklyDayRange) {
+        String patternString =
+                "\\b" + WEEKDAY_PATTERN + "\\s*-\\s*" + WEEKDAY_PATTERN + "(\\s*-\\s*" + WEEKDAY_PATTERN + ")+\\b";
+        Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        Matcher matcher = pattern.matcher(weeklyDayRange);
+        StringBuilder rangeString = new StringBuilder();
+        if (matcher.find()) {
+            String[] days = weeklyDayRange.split("\\s*-\\s*");
+            for (int i = 0; i < days.length - 1; i++) {
+                rangeString.append(days[i]).append("-").append(days[i + 1]);
+                if (i < days.length - 2) {
+                    rangeString.append(";");
+                }
+            }
+            return rangeString.toString();
+        }
+        return weeklyDayRange;
+    }
+
+    /**
+     * Standardizes the weekly day range in the description.
+     * It replaces full day names with abbreviations and performs normalization and formatting steps.
+     */
     private void standardizeWeeklyDayRange() {
         if (weeklyDayRange == null)
             return;
@@ -364,32 +425,37 @@ public class RpaSignDescriptionParser {
             // Replace full day names with abbreviations
             weeklyDayRange = weeklyDayRange
                     .replaceAll(entry.getKey(), " " + abbreviation + " ")
-                    .replaceAll("(\\b" + abbreviation + ")(AU|À|ET|-)", "$1 $2")
-                    .replaceAll("(AU|À|ET|-)(\\b" + abbreviation + ")", "$1 $2")
+                    .replaceAll("(\\b" + abbreviation + ")(AU|ET|-)", "$1 $2")
+                    .replaceAll("(AU|ET|-)(\\b" + abbreviation + ")", "$1 $2")
                     .trim();
         }
 
         // Normalize spacing and handle special cases like ranges and combinations
-        weeklyDayRange = weeklyDayRange
+        weeklyDayRange = standardizeWeeklyDayRangePattern(weeklyDayRange);
+        weeklyDayRange = standardizeWeeklyDayRangePattern(weeklyDayRange)
                 .replaceAll("\\sAU\\s", "-")
                 .replaceAll("\\sA\\s", "-")
-                .replaceAll("\\sÀ\\s", "-")
                 .replaceAll("\\sET\\s", ";")
                 .replaceAll("\\s*-\\s*", "-")
                 .replaceAll("\\s*;\\s*", ";")
-                .replaceAll("É", "E")
-                .replaceAll("'", " ").trim()
+                .replaceAll("'", " ")
                 .replaceAll("\\s+", "_")
                 .replaceAll("\\bJOURS_D_ECOLE\\b", "JOURS_D_ECOLES")
                 .trim();
     }
 
+    /**
+     * Standardizes the annual month range pattern in a given string.
+     * Replaces full month names with abbreviations and performs final formatting steps.
+     *
+     * @param range The string containing the annual month range pattern to be standardized
+     * @return The string with standardized annual month range pattern
+     */
     private String standardizeAnnualMonthRangePattern(String range) {
-        String searchPattern = "\\b" + MONTH_NAME_PATTERN + "\\s*(1ER|\\d{1,2})?\\s*(A(U)?|ET|-|À)\\s*("
-                + MONTH_NAME_PATTERN + ")\\s*(1ER|\\d{1,2})?\\b";
-        Pattern pattern = Pattern.compile(searchPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        Pattern pattern = Pattern.compile(
+                ANNUAL_MONTH_RANGE_PATTERN_SECOND, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
         Matcher matcher = pattern.matcher(range);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         while (matcher.find()) {
             String startMonth = matcher.group(1);
@@ -410,6 +476,11 @@ public class RpaSignDescriptionParser {
         return sb.toString().trim();
     }
 
+
+    /**
+     * This method standardizes the annual month range in the description.
+     * It replaces full month names with abbreviations and performs final formatting steps.
+     */
     private void standardizeAnnualMonthRange() {
         if (annualMonthRange == null)
             return;
@@ -423,8 +494,8 @@ public class RpaSignDescriptionParser {
             // Replace full day names with abbreviations
             annualMonthRange = annualMonthRange
                     .replaceAll(entry.getKey(), " " + abbreviation + " ")
-                    .replaceAll("(\\b" + abbreviation + ")(AU|À|ET|-)", "$1 $2")
-                    .replaceAll("(AU|À|ET|-)(\\b" + abbreviation + ")", "$1 $2");
+                    .replaceAll("(\\b" + abbreviation + ")(AU|A|ET|-)", "$1 $2")
+                    .replaceAll("(AU|A|ET|-)(\\b" + abbreviation + ")", "$1 $2");
         }
 
         // Final formatting steps
@@ -432,7 +503,6 @@ public class RpaSignDescriptionParser {
                 .replaceAll("1ER", "1")
                 .replaceAll("\\sAU\\s", " - ")
                 .replaceAll("\\sA\\s", " - ")
-                .replaceAll("\\sÀ\\s", " - ")
                 .replaceAll("-", " - ")
                 .replaceAll("\\sET\\s", " - ") // REVIEW
                 .replaceAll("\\s*;\\s*", ";")
@@ -451,18 +521,15 @@ public class RpaSignDescriptionParser {
                 .replaceAll("[^\\p{L}\\p{N}\\s]", " ")
                 .replaceAll("\\s+", " ")
                 .replaceAll("(\\d+)\\s*X\\s*(\\d+)", "$1 X $2")
-                .trim();
+                // If the cleanedDescription is "DE", "DU" or "ET" remove it
+                .replaceAll("^\\s*DE\\s*$", "")
+                .replaceAll("\\s+DE\\s*$", "")
+                .replaceAll("^\\s*DU\\s*$", "")
+                .replaceAll("^\\s+ET\\s*$", "").trim();
 
-        cleanedDescription = (cleanedDescription.equalsIgnoreCase("DU")) ? "" : cleanedDescription;
-        cleanedDescription = (cleanedDescription.equalsIgnoreCase("ET")) ? "" : cleanedDescription;
-
-        // If the cleanedDescription ends with "DE", remove it
-        if (cleanedDescription.toUpperCase().endsWith(" DE") || cleanedDescription.toUpperCase().endsWith(" DU")) {
-            cleanedDescription = cleanedDescription.substring(0, cleanedDescription.length() - 3);
-        }
-
-        if (LIST_OF_METADATA_TO_IGNORE.contains(cleanedDescription)) cleanedDescription = "";
-
-        additionalInfo = cleanedDescription.trim();
+        if (LIST_OF_METADATA_TO_IGNORE.contains(cleanedDescription) || cleanedDescription.isEmpty())
+            additionalInfo = null;
+        else
+            additionalInfo = cleanedDescription;
     }
 }
