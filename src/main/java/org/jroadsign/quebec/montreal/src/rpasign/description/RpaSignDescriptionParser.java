@@ -380,7 +380,7 @@ public class RpaSignDescriptionParser {
         dailyTimeRange = dailyTimeRange
                 .replaceAll("A", "-")
                 .replaceAll("\\s+", "")
-                .replaceAll("24H", "00H")
+                .replaceAll("24H(\\d{0,2})?", "23H$1")
                 // .replaceAll("H", ":") // TODO
                 .trim();
     }

@@ -14,19 +14,30 @@ public class RpaSignDescription {
     private List<DailyTimeRange> dailyTimeRangeList;
     private WeeklyDays weeklyDays; // REVIEW
     private List<AnnualMonthRange> annualMonthRangeList;
-    String additionalMetaData;
+    private String additionalMetaData;
 
 
     public RpaSignDescription(String sDescription) {
         stringDescription = sDescription;
         RpaSignDescriptionParser rpaSignDescriptionParser = new RpaSignDescriptionParser(sDescription);
 
+        initDurationMinutesList(rpaSignDescriptionParser);
+        initDailyTimeRangeList(rpaSignDescriptionParser);
+        initWeeklyDays(rpaSignDescriptionParser);
+        initAnnualMonthRangeList(rpaSignDescriptionParser);
+        initAdditionalMetaData(rpaSignDescriptionParser);
+    }
+
+    private void initDurationMinutesList(RpaSignDescriptionParser rpaSignDescriptionParser) {
         if (rpaSignDescriptionParser.getDurationMinutes() != null) {
             durationMinutesList = new ArrayList<>();
             String[] tabDurationsMinutes = rpaSignDescriptionParser.getDurationMinutes().split(";");
             for (String element : tabDurationsMinutes)
                 durationMinutesList.add(new DurationMinutes(element));
         }
+    }
+
+    private void initDailyTimeRangeList(RpaSignDescriptionParser rpaSignDescriptionParser) {
         if (rpaSignDescriptionParser.getDailyTimeRange() != null) {
             dailyTimeRangeList = new ArrayList<>();
             String[] tabDailyTimeRanges = rpaSignDescriptionParser.getDailyTimeRange().split(";");
@@ -36,8 +47,8 @@ public class RpaSignDescription {
                 } catch (StartAfterEndException e1) {
                     if (e1.getRange() != null && e1.getRange() instanceof Range<?>) {
                         Range<LocalTime> lastRange = (Range<LocalTime>) e1.getRange();
-                        Range<LocalTime> newRange1 = new Range<>(LocalTime.of(0, 0), lastRange.getEnd());
-                        Range<LocalTime> newRange2 = new Range<>(lastRange.getStart(), LocalTime.of(23, 59));
+                        Range<LocalTime> newRange1 = new Range<>(lastRange.getStart(), LocalTime.of(23, 59));
+                        Range<LocalTime> newRange2 = new Range<>(LocalTime.of(0, 0), lastRange.getEnd());
                         try {
                             dailyTimeRangeList.add(new DailyTimeRange(newRange1));
                             dailyTimeRangeList.add(new DailyTimeRange(newRange2));
@@ -53,9 +64,15 @@ public class RpaSignDescription {
                 }
             }
         }
+    }
+
+    private void initWeeklyDays(RpaSignDescriptionParser rpaSignDescriptionParser) {
         if (rpaSignDescriptionParser.getWeeklyDayRange() != null) {
             weeklyDays = new WeeklyDays(rpaSignDescriptionParser.getWeeklyDayRange());
         }
+    }
+
+    private void initAnnualMonthRangeList(RpaSignDescriptionParser rpaSignDescriptionParser) {
         if (rpaSignDescriptionParser.getAnnualMonthRange() != null) {
             annualMonthRangeList = new ArrayList<>();
             String[] tabAnnualMonthRanges = rpaSignDescriptionParser.getAnnualMonthRange().split(";");
@@ -65,8 +82,8 @@ public class RpaSignDescription {
                 } catch (StartAfterEndException e1) {
                     if (e1.getRange() != null && e1.getRange() instanceof Range<?>) {
                         Range<MonthDay> lastRange = (Range<MonthDay>) e1.getRange();
-                        Range<MonthDay> newRange1 = new Range<>(MonthDay.of(1, 1), lastRange.getEnd());
-                        Range<MonthDay> newRange2 = new Range<>(lastRange.getStart(), MonthDay.of(12, 31));
+                        Range<MonthDay> newRange1 = new Range<>(lastRange.getStart(), MonthDay.of(12, 31));
+                        Range<MonthDay> newRange2 = new Range<>(MonthDay.of(1, 1), lastRange.getEnd());
                         try {
                             annualMonthRangeList.add(new AnnualMonthRange(newRange1));
                             annualMonthRangeList.add(new AnnualMonthRange(newRange2));
@@ -81,6 +98,9 @@ public class RpaSignDescription {
                 }
             }
         }
+    }
+
+    private void initAdditionalMetaData(RpaSignDescriptionParser rpaSignDescriptionParser) {
         if (rpaSignDescriptionParser.getAdditionalInfo() != null) {
             additionalMetaData = rpaSignDescriptionParser.getAdditionalInfo();
         }
