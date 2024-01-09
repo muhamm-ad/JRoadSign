@@ -38,7 +38,7 @@ public class ParseFunctions {
                 .replace("1ER", "01");
 
         // Reformat day time range
-        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
+        //cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
 
         cleanedDescription = correctSpelling(cleanedDescription);
         // Add space between a letter and a number if there isn't one
@@ -147,7 +147,7 @@ public class ParseFunctions {
      */
     private static String insertSpaceBetweenDayAndMonth(String description) {
         Pattern annualMonthRangePattern = Pattern.compile(
-                "\\b((" + GlobalConfigs.TWO_DIGIT + GlobalConfigs.ANNUAL_MONTH_PATTERN + "))\\b",
+                "\\b((" + GlobalConfigs.TWO_DIGIT + ")(" + GlobalConfigs.ANNUAL_MONTH_PATTERN + "))\\b",
                 Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
         Matcher dateMatcher = annualMonthRangePattern.matcher(description);
