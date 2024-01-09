@@ -1,6 +1,8 @@
 // License: GPL-3.0. For details, see README.md file.
 
-package org.jroadsign.quebec.montreal.src.rpasign.description;
+package org.jroadsign.quebec.montreal.src.rpasign.description.exceptions;
+
+import org.jroadsign.quebec.montreal.src.rpasign.description.Range;
 
 public class StartAfterEndException extends Exception {
 

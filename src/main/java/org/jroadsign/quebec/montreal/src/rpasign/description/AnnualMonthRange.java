@@ -2,20 +2,30 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalFunctions;
+import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
+
 import java.time.DateTimeException;
 import java.time.MonthDay;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AnnualMonthRange {
     public static final String MSG_ERR_INVALID_FORMAT_S_ARG =
-            "Invalid AnnualMonthRange format: `%s`. Expected format: `startDay startMonth - endMonth endMonth`";
+            "Invalid AnnualMonthRange format: `%s`. Expected format:"
+                    + GlobalConfigs.ANNUAL_MONTH_RANGE_LITERAL_PATTERN_FIRST;
     public static final String MSG_ERR_START_AFTER_END =
             "Start date %s is after end date %s. AnnualMonthRange should be within the same year.";
+
+    private static final Pattern COMPILED_ANNUAL_MONTH_RANGE_PATTERN =
+            Pattern.compile("^" + GlobalConfigs.ANNUAL_MONTH_RANGE_LITERAL_PATTERN_FIRST + "$");
+
 
     private Range<MonthDay> range;
 
     public AnnualMonthRange(String sAnnualMonthRange) throws StartAfterEndException {
-        Matcher matcher = GlobalConfig.COMPILED_ANNUAL_MONTH_RANGE_PATTERN.matcher(sAnnualMonthRange);
+        Matcher matcher = COMPILED_ANNUAL_MONTH_RANGE_PATTERN.matcher(sAnnualMonthRange);
         if (!matcher.find())
             throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sAnnualMonthRange));
 
@@ -42,7 +52,7 @@ public class AnnualMonthRange {
 
     private MonthDay parseMonthDay(String sDay, String sMonth) {
         int day = Integer.parseInt(sDay);
-        int month = GlobalFunction.convertMonthNameToNumber(sMonth);
+        int month = GlobalFunctions.convertMonthNameToNumber(sMonth);
 
         try {
             return MonthDay.of(month, day);

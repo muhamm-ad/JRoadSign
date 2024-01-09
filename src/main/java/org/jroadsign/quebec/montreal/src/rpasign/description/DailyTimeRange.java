@@ -2,22 +2,29 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
+import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
+
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DailyTimeRange {
 
     public static final String MSG_ERR_INVALID_FORMAT_S_ARG =
-            "Invalid DailyTimeRange format: %s. Expected format: " + GlobalConfig.DAY_TIME_RANGE_PATTERN;
+            "Invalid DailyTimeRange format: %s. Expected format: "
+                    + String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "", "-");
     public static final String MSG_ERR_START_AFTER_END =
             "Start time `%s` is after end time `%s`. DailyTimeRange should be within the same day.";
+    private static final Pattern COMPILED_DAY_TIME_RANGE_PATTERN = Pattern.compile(
+            "^" + String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "", "-") + "$");
 
     private Range<LocalTime> range;
 
     public DailyTimeRange(String sDailyTimeRange) throws StartAfterEndException {
-        Matcher matcher = GlobalConfig.COMPILED_DAY_TIME_RANGE_PATTERN.matcher(sDailyTimeRange);
+        Matcher matcher = COMPILED_DAY_TIME_RANGE_PATTERN.matcher(sDailyTimeRange);
         if (!matcher.find())
             throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sDailyTimeRange));
 
@@ -34,7 +41,7 @@ public class DailyTimeRange {
     private void validateRange(LocalTime start, LocalTime end) throws StartAfterEndException {
         if (start.isAfter(end))
             throw new StartAfterEndException(
-                    String.format(MSG_ERR_START_AFTER_END, start, end), new Range<LocalTime>(start, end));
+                    String.format(MSG_ERR_START_AFTER_END, start, end), new Range<>(start, end));
     }
 
     private void validateAndSetRange(LocalTime start, LocalTime end) throws StartAfterEndException {

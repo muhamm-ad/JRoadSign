@@ -2,11 +2,13 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
+
 public enum WeekRangeExpression {
-    ALL_TIMES(GlobalConfig.ALL_TIMES),
-    ALL_TIMES_EXCEPT(GlobalConfig.ALL_TIMES_EXCEPT),
-    SCHOOL_DAYS(GlobalConfig.SCHOOL_DAYS, GlobalConfig.CLASS_DAYS),
-    WEEK_END(GlobalConfig.WEEK_END);
+    ALL_TIMES(GlobalConfigs.ALL_TIMES),
+    ALL_TIMES_EXCEPT(GlobalConfigs.ALL_TIMES_EXCEPT),
+    SCHOOL_DAYS(GlobalConfigs.SCHOOL_DAYS, GlobalConfigs.CLASS_DAYS),
+    WEEK_END(GlobalConfigs.WEEK_END);
 
     private final String[] descriptions;
 

@@ -2,15 +2,22 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
+
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DurationMinutes {
     private static final String MSG_ERR_INVALID_FORMAT_S_ARG =
-            "Invalid DurationMinutes format: `%s`. Expected format: " + GlobalConfig.DURATION_PATTERN;
+            "Invalid DurationMinutes format: `%s`. Expected format: "
+                    + String.format(GlobalConfigs.DURATION_PATTERN, " ");
+    private static final Pattern COMPILED_DURATION_PATTERN = Pattern.compile(
+            "^" + String.format(GlobalConfigs.DURATION_PATTERN, " ") + "$");
+
     private int duration;
 
     public DurationMinutes(String sDurationMinutes) {
-        Matcher matcher = GlobalConfig.COMPILED_DURATION_PATTERN.matcher(sDurationMinutes);
+        Matcher matcher = COMPILED_DURATION_PATTERN.matcher(sDurationMinutes);
         if (!matcher.find()) {
             throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sDurationMinutes));
         }
