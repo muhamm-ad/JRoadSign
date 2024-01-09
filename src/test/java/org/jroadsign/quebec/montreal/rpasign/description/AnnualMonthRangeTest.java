@@ -3,7 +3,7 @@
 package org.jroadsign.quebec.montreal.rpasign.description;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.AnnualMonthRange;
-import org.jroadsign.quebec.montreal.src.rpasign.description.StartAfterEndException;
+import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
 import org.junit.Test;
 
 import java.time.MonthDay;

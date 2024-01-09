@@ -3,9 +3,9 @@
 package org.jroadsign.quebec.montreal.rpasign.description;
 
 
-import org.jroadsign.quebec.montreal.src.rpasign.description.GlobalConfig;
 import org.jroadsign.quebec.montreal.src.rpasign.description.WeekRangeExpression;
 import org.jroadsign.quebec.montreal.src.rpasign.description.WeeklyDays;
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 import org.junit.Test;
 
 import java.time.DayOfWeek;
@@ -213,20 +213,20 @@ public class WeeklyDaysTest {
         EnumSet<DayOfWeek> expected = EnumSet.allOf(DayOfWeek.class);
         assertEquals(expected, weeklyDays.getDays());
 
-        weeklyDays = new WeeklyDays(GlobalConfig.ALL_TIMES_EXCEPT + ";LUN;VEN");
+        weeklyDays = new WeeklyDays(GlobalConfigs.ALL_TIMES_EXCEPT + ";LUN;VEN");
         expected = EnumSet.allOf(DayOfWeek.class);
         expected.remove(DayOfWeek.MONDAY);
         expected.remove(DayOfWeek.FRIDAY);
         assertEquals(expected, weeklyDays.getDays());
 
-        weeklyDays = new WeeklyDays("SAM;MAR;" + GlobalConfig.ALL_TIMES_EXCEPT + ";VEN");
+        weeklyDays = new WeeklyDays("SAM;MAR;" + GlobalConfigs.ALL_TIMES_EXCEPT + ";VEN");
         expected = EnumSet.allOf(DayOfWeek.class);
         expected.remove(DayOfWeek.SATURDAY);
         expected.remove(DayOfWeek.TUESDAY);
         expected.remove(DayOfWeek.FRIDAY);
         assertEquals(expected, weeklyDays.getDays());
 
-        weeklyDays = new WeeklyDays("MER;JEU;VEN;" + GlobalConfig.ALL_TIMES_EXCEPT);
+        weeklyDays = new WeeklyDays("MER;JEU;VEN;" + GlobalConfigs.ALL_TIMES_EXCEPT);
         expected = EnumSet.allOf(DayOfWeek.class);
         expected.remove(DayOfWeek.WEDNESDAY);
         expected.remove(DayOfWeek.THURSDAY);
