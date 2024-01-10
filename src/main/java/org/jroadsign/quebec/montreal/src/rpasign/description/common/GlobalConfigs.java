@@ -15,7 +15,7 @@ public class GlobalConfigs {
     }
 
     public static final String TWO_DIGIT = "\\d{1,2}";
-    private static final String RANGE_DELIMITER_PATTERN = "\\s*(AU?|-|ET)\\s*";
+    public static final String RANGE_DELIMITER_PATTERN = "\\s*(?:AU?|-|ET)\\s*";
 
 
     /******************************************** DurationMinutes **************************************
@@ -62,10 +62,10 @@ public class GlobalConfigs {
     public static final String SUNDAY_PATTERN = "DIM(?:ANCHE)?";
     public static final String SUNDAY = "DIM";
     public static final String WEEKLY_DAYS_EXPRESSION_PATTERN =
-            ALL_TIME_PATTERN + "|" + ALL_TIME_EXCEPT_PATTERN + "|"
+            ALL_TIME_EXCEPT_PATTERN + "|" + ALL_TIME_PATTERN + "|"
                     + SCHOOL_DAYS_PATTERN + "|" + CLASS_DAYS_PATTERN + "|" + WEEK_END_PATTERN;
     public static final String WEEKLY_DAYS_EXPRESSION_LITERAL_PATTERN =
-            ALL_TIMES + "|" + ALL_TIMES_EXCEPT + "|" + SCHOOL_DAYS + "|" + CLASS_DAYS + "|" + WEEK_END;
+            ALL_TIMES_EXCEPT + "|" + ALL_TIMES + "|" + SCHOOL_DAYS + "|" + CLASS_DAYS + "|" + WEEK_END;
     public static final String WEEKLY_DAYS_PATTERN =
             MONDAY_PATTERN + "|" + TUESDAY_PATTERN + "|" + WEDNESDAY_PATTERN + "|" + THURSDAY_PATTERN
                     + "|" + FRIDAY_PATTERN + "|" + SATURDAY_PATTERN + "|" + SUNDAY_PATTERN;
@@ -137,28 +137,28 @@ public class GlobalConfigs {
 
     // Pattern for matching a date range in the format: DAY MONTH - DAY MONTH
     public static final String ANNUAL_MONTH_RANGE_PATTERN_FIRST =
-            "(" + TWO_DIGIT + ")\\s*(" + ANNUAL_MONTH_PATTERN + ")" + RANGE_DELIMITER_PATTERN
-                    + "(" + TWO_DIGIT + ")\\s*(" + ANNUAL_MONTH_PATTERN + ")";
+            "(" + TWO_DIGIT + ")?\\s*(" + ANNUAL_MONTH_PATTERN + ")" + RANGE_DELIMITER_PATTERN
+                    + "(" + TWO_DIGIT + ")?\\s*(" + ANNUAL_MONTH_PATTERN + ")";
 
     // Pattern for matching a date range in the format: MONTH DAY - MONTH DAY
     public static final String ANNUAL_MONTH_RANGE_PATTERN_SECOND =
-            "(" + ANNUAL_MONTH_PATTERN + ")\\s*(" + TWO_DIGIT + ")" + RANGE_DELIMITER_PATTERN
-                    + "(" + ANNUAL_MONTH_PATTERN + ")\\s*(" + TWO_DIGIT + ")";
+            "(" + ANNUAL_MONTH_PATTERN + ")\\s*(" + TWO_DIGIT + ")?" + RANGE_DELIMITER_PATTERN
+                    + "(" + ANNUAL_MONTH_PATTERN + ")\\s*(" + TWO_DIGIT + ")?";
     public static final String ANNUAL_MONTH_RANGE_PATTERN =
             "(" + ANNUAL_MONTH_RANGE_PATTERN_FIRST + "|" + ANNUAL_MONTH_RANGE_PATTERN_SECOND + ")";
 
 
     // Pattern for matching a date range in the format: DAY L_MONTH - DAY L_MONTH
     public static final String ANNUAL_MONTH_RANGE_LITERAL_PATTERN_FIRST =
-            "(" + TWO_DIGIT + ")\\s(" + ANNUAL_MONTH_LITERAL_PATTERN + ")\\s-\\s("
-                    + TWO_DIGIT + ")\\s(" + ANNUAL_MONTH_LITERAL_PATTERN + ")";
+            "(" + TWO_DIGIT + ")?\\s(" + ANNUAL_MONTH_LITERAL_PATTERN + ")\\s-\\s("
+                    + TWO_DIGIT + ")?\\s(" + ANNUAL_MONTH_LITERAL_PATTERN + ")";
 
     // Pattern for matching a date range in the format: L_MONTH DAY - L_MONTH DAY
     public static final String ANNUAL_MONTH_RANGE_LITERAL_PATTERN_SECOND =
-            "(" + ANNUAL_MONTH_LITERAL_PATTERN + ")\\s(" + TWO_DIGIT + ")\\s-\\s("
-                    + ANNUAL_MONTH_LITERAL_PATTERN + ")\\s(" + TWO_DIGIT + ")";
+            "(" + ANNUAL_MONTH_LITERAL_PATTERN + ")\\s(" + TWO_DIGIT + ")?\\s-\\s("
+                    + ANNUAL_MONTH_LITERAL_PATTERN + ")\\s(" + TWO_DIGIT + ")?";
     public static final String ANNUAL_MONTH_RANGE_LITERAL_PATTERN =
-            "((" + ANNUAL_MONTH_RANGE_LITERAL_PATTERN_FIRST + ")|(" + ANNUAL_MONTH_RANGE_LITERAL_PATTERN_SECOND + "))";
+            "(" + ANNUAL_MONTH_RANGE_LITERAL_PATTERN_FIRST + "|" + ANNUAL_MONTH_RANGE_LITERAL_PATTERN_SECOND + ")";
 
 
     public static final Map<String, String> ANNUAL_MONTH_ABBREVIATIONS_MAP = new HashMap<>();

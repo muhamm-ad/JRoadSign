@@ -2,155 +2,71 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
-import java.time.LocalTime;
-import java.time.MonthDay;
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.ParseFunctions;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RpaSignDescription {
     private String stringDescription;
-    private List<DurationMinutes> durationMinutesList;
-    private List<DailyTimeRange> dailyTimeRangeList;
-    private WeeklyDays weeklyDays; // REVIEW
-    private List<AnnualMonthRange> annualMonthRangeList;
-    private String additionalMetaData;
+    private List<RpaSignDescRule> rpaSignDescRules;
+    private List<String> additionalMetaDataList;
+
+
+    private static final String DESC_RULE_PATTERN =
+            String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\\\s*", "\\\\s*(AU?|-)\\\\s*") + "\\s*"
+                    + GlobalConfigs.WEEKLY_DAYS_RANGE_EXPRESSION_PATTERN + "*\\s*"
+                    + GlobalConfigs.ANNUAL_MONTH_RANGE_PATTERN + "\\s*";
+    private static final String COMBINED_DESC_RULE_PATTERN = DESC_RULE_PATTERN + "(," + DESC_RULE_PATTERN + ")*";
+    private static final Pattern COMPILED_COMBINED_DESC_RULE_PATTERN = Pattern.compile(
+            "\\b" + COMBINED_DESC_RULE_PATTERN + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
 
     public RpaSignDescription(String sDescription) {
         stringDescription = sDescription;
-        RpaSignDescriptionParser rpaSignDescriptionParser = new RpaSignDescriptionParser(sDescription);
+        rpaSignDescRules = new ArrayList<>();
 
-        initDurationMinutesList(rpaSignDescriptionParser);
-        initDailyTimeRangeList(rpaSignDescriptionParser);
-        initWeeklyDays(rpaSignDescriptionParser);
-        initAnnualMonthRangeList(rpaSignDescriptionParser);
-        initAdditionalMetaData(rpaSignDescriptionParser);
-    }
+        String sDesc = ParseFunctions.cleanDescription(sDescription);
+        Matcher matcherCombinedRules = COMPILED_COMBINED_DESC_RULE_PATTERN.matcher(sDesc);
 
-    private void initDurationMinutesList(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getDurationMinutes() != null) {
-            durationMinutesList = new ArrayList<>();
-            String[] tabDurationsMinutes = rpaSignDescriptionParser.getDurationMinutes().split(";");
-            for (String element : tabDurationsMinutes)
-                durationMinutesList.add(new DurationMinutes(element));
+        if (matcherCombinedRules.find()) {
+            for (String descRule : sDesc.split(",")) {
+                rpaSignDescRules.add(new RpaSignDescRule(descRule.trim()));
+            }
+        } else {
+            rpaSignDescRules.add(new RpaSignDescRule(sDesc.trim()));
         }
-    }
 
-    private void initDailyTimeRangeList(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getDailyTimeRange() != null) {
-            dailyTimeRangeList = new ArrayList<>();
-            String[] tabDailyTimeRanges = rpaSignDescriptionParser.getDailyTimeRange().split(";");
-            for (String element : tabDailyTimeRanges) {
-                try {
-                    dailyTimeRangeList.add(new DailyTimeRange(element));
-                } catch (StartAfterEndException e1) {
-                    if (e1.getRange() != null && e1.getRange() instanceof Range<?>) {
-                        Range<LocalTime> lastRange = (Range<LocalTime>) e1.getRange();
-                        Range<LocalTime> newRange1 = new Range<>(lastRange.getStart(), LocalTime.of(23, 59));
-                        Range<LocalTime> newRange2 = new Range<>(LocalTime.of(0, 0), lastRange.getEnd());
-                        try {
-                            dailyTimeRangeList.add(new DailyTimeRange(newRange1));
-                            dailyTimeRangeList.add(new DailyTimeRange(newRange2));
-                        } catch (StartAfterEndException e2) {
-                            throw new IllegalArgumentException(
-                                    String.format(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG, element));
-                        }
-                    } else {
-                        throw new IllegalArgumentException(
-                                String.format(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG, element));
-                    }
-
-                }
+        additionalMetaDataList = new ArrayList<>();
+        for (RpaSignDescRule rule : rpaSignDescRules) {
+            if (rule.getRuleAdditionalMetaData() != null) {
+                additionalMetaDataList.add(rule.getRuleAdditionalMetaData());
             }
         }
     }
 
-    private void initWeeklyDays(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getWeeklyDayRange() != null) {
-            weeklyDays = new WeeklyDays(rpaSignDescriptionParser.getWeeklyDayRange());
-        }
-    }
-
-    private void initAnnualMonthRangeList(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getAnnualMonthRange() != null) {
-            annualMonthRangeList = new ArrayList<>();
-            String[] tabAnnualMonthRanges = rpaSignDescriptionParser.getAnnualMonthRange().split(";");
-            for (String element : tabAnnualMonthRanges) {
-                try {
-                    annualMonthRangeList.add(new AnnualMonthRange(element));
-                } catch (StartAfterEndException e1) {
-                    if (e1.getRange() != null && e1.getRange() instanceof Range<?>) {
-                        Range<MonthDay> lastRange = (Range<MonthDay>) e1.getRange();
-                        Range<MonthDay> newRange1 = new Range<>(lastRange.getStart(), MonthDay.of(12, 31));
-                        Range<MonthDay> newRange2 = new Range<>(MonthDay.of(1, 1), lastRange.getEnd());
-                        try {
-                            annualMonthRangeList.add(new AnnualMonthRange(newRange1));
-                            annualMonthRangeList.add(new AnnualMonthRange(newRange2));
-                        } catch (StartAfterEndException e2) {
-                            throw new IllegalArgumentException(
-                                    String.format(AnnualMonthRange.MSG_ERR_INVALID_FORMAT_S_ARG, element));
-                        }
-                    } else {
-                        throw new IllegalArgumentException(
-                                String.format(AnnualMonthRange.MSG_ERR_INVALID_FORMAT_S_ARG, element));
-                    }
-                }
-            }
-        }
-    }
-
-    private void initAdditionalMetaData(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getAdditionalInfo() != null) {
-            additionalMetaData = rpaSignDescriptionParser.getAdditionalInfo();
-        }
-    }
-
-    public RpaSignDescription(List<DurationMinutes> durationMinutesList,
-                              List<DailyTimeRange> dailyTimeRangeList,
-                              WeeklyDays weeklyDays,
-                              List<AnnualMonthRange> annualMonthRangeList,
-                              String additionalMetaData) {
-        this.durationMinutesList = durationMinutesList;
-        this.dailyTimeRangeList = dailyTimeRangeList;
-        this.weeklyDays = weeklyDays;
-        this.annualMonthRangeList = annualMonthRangeList;
-        this.additionalMetaData = additionalMetaData;
-    }
 
     public String getStringDescription() {
         return stringDescription;
     }
 
-    public List<DurationMinutes> getDurationMinutesList() {
-        return durationMinutesList != null ? durationMinutesList : Collections.emptyList();
+    public List<RpaSignDescRule> getRpaSignDescRules() {
+        return rpaSignDescRules;
     }
 
-    public List<DailyTimeRange> getDailyTimeRangeList() {
-        return dailyTimeRangeList != null ? dailyTimeRangeList : Collections.emptyList();
-    }
-
-    public WeeklyDays getWeeklyDays() {
-        return weeklyDays;
-    }
-
-    public List<AnnualMonthRange> getAnnualMonthRangeList() {
-        return annualMonthRangeList != null ? annualMonthRangeList : Collections.emptyList();
-    }
-
-    public String getAdditionalMetaData() {
-        return additionalMetaData;
+    public List<String> getAdditionalMetaDataList() {
+        return additionalMetaDataList;
     }
 
     @Override
     public String toString() {
         return "RpaSignDescription{" +
                 "stringDescription='" + stringDescription + '\'' +
-                ", durationMinutesList=" + durationMinutesList +
-                ", dailyTimeRangeList=" + dailyTimeRangeList +
-                ", weeklyDays=" + weeklyDays +
-                ", annualMonthRangeList=" + annualMonthRangeList +
-                ", additionalMetaData='" + additionalMetaData + '\'' +
+                ", rpaSignDescRules=" + rpaSignDescRules +
+                ", additionalMetaData='" + additionalMetaDataList + '\'' +
                 '}';
     }
 }

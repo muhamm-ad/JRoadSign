@@ -42,19 +42,19 @@ public class RpaSignDescriptionParser {
     private void extractInformations(String description) {
         // Compile regular expressions for pattern matching
         Pattern parkingDurationPattern = Pattern.compile(
-                "\\b" + String.format(GlobalConfigs.DURATION_PATTERN, "\\\\s*") + "\\b",
+                "\\b(" + String.format(GlobalConfigs.DURATION_PATTERN, "\\s*") + ")\\b",
                 Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
         Pattern dailyTimeRangePattern = Pattern.compile(
-                "\\b" + String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\\\s*", "\\\\s*(AU?|-)\\\\s*") + "\\b",
+                "\\b(" + String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\s*", "\\s*(AU?|-)\\s*") + ")\\b",
                 Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
         Pattern weeklyDayRangePattern = Pattern.compile(
-                "\\b" + GlobalConfigs.WEEKLY_DAYS_RANGE_EXPRESSION_PATTERN + "\\b",
+                "\\b(" + GlobalConfigs.WEEKLY_DAYS_RANGE_EXPRESSION_PATTERN + ")\\b",
                 Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
         Pattern annualMonthRangePattern = Pattern.compile(
-                "\\b" + GlobalConfigs.ANNUAL_MONTH_RANGE_PATTERN + "\\b",
+                "\\b(" + GlobalConfigs.ANNUAL_MONTH_RANGE_PATTERN + ")\\b",
                 Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
         // Create matchers for each pattern
@@ -246,15 +246,9 @@ public class RpaSignDescriptionParser {
         while (matcher.find()) {
             String startMonth = matcher.group(1);
             String startDay = matcher.group(2) != null ? matcher.group(2) : "1";
-            String separation = matcher.group(3);
-            String endMonth = matcher.group(4) != null ? matcher.group(5) : "1";
-            String endDay = matcher.group(5);
-            String replacement;
-            if (matcher.group(4) != null) {
-                replacement = startDay + " " + startMonth + " " + separation + " " + endDay + " " + endMonth;
-            } else {
-                replacement = startDay + " " + startMonth + " " + separation + " " + endMonth + " " + endDay;
-            }
+            String endMonth = matcher.group(3);
+            String endDay = matcher.group(4) != null ? matcher.group(4) : "1";
+            String replacement = startDay + " " + startMonth + " - " + endDay + " " + endMonth;
             matcher.appendReplacement(sb, replacement);
         }
         matcher.appendTail(sb);

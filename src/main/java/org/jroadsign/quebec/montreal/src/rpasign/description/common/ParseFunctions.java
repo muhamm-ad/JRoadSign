@@ -35,7 +35,7 @@ public class ParseFunctions {
                 .replace("É", "E")
                 .replace("È", "E")
                 .replace("À", "A")
-                .replace("1ER", "01");
+                .replace("1ER", "1");
 
         // Reformat day time range
         //cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
