@@ -131,4 +131,15 @@ public class RpaSignDescRule {
     public List<AnnualMonthRange> getAnnualMonthRangeList() {
         return annualMonthRangeList != null ? annualMonthRangeList : Collections.emptyList();
     }
+
+    @Override
+    public String toString() {
+        return "RpaSignDescRule{" +
+                "durationMinutesList=" + durationMinutesList +
+                ", dailyTimeRangeList=" + dailyTimeRangeList +
+                ", weeklyDays=" + weeklyDays +
+                ", annualMonthRangeList=" + annualMonthRangeList +
+                ", ruleAdditionalMetaData='" + ruleAdditionalMetaData + '\'' +
+                '}';
+    }
 }
