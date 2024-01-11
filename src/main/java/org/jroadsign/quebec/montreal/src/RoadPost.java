@@ -79,7 +79,7 @@ public class RoadPost implements Comparable<RoadPost> {
 
     public boolean hasSign(String codeRpa) {
         for (RoadSign roadSign : roadSigns) {
-            if (roadSign.getRpaSign().code().equals(codeRpa))
+            if (roadSign.getRpaSign().getStringCode().equalsIgnoreCase(codeRpa))
                 return true;
         }
         return false;

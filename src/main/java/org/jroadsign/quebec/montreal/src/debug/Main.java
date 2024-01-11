@@ -4,11 +4,12 @@ import org.jroadsign.quebec.montreal.src.MontrealRoadPostSignsGeojsonReader;
 import org.jroadsign.quebec.montreal.src.RoadSign;
 import org.jroadsign.quebec.montreal.src.rpasign.RpaSign;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RoadSignDescCleaner;
-import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescParser;
 
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
@@ -64,7 +65,7 @@ public class Main {
         ) {
             for (RoadSign s : roadSigns.values()) {
                 RpaSign rpaSign = s.getRpaSign();
-                String sDescription = rpaSign.description().getStringDescription();
+                String sDescription = rpaSign.getStringDescription();
                 RpaSignDescParser rpaSignDes =
                         new RpaSignDescParser(RoadSignDescCleaner.cleanDescription(sDescription));
 
@@ -132,114 +133,25 @@ public class Main {
 
     private static void debugRoadSign(SortedMap<Long, RoadSign> roadSigns) {
         try (
-                BufferedWriter writerRoadSigns =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RoadSigns.txt")));
-                BufferedWriter writerRpaSigns =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSigns.txt")));
+                BufferedWriter writerRoadSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RoadSigns.txt")));
+                BufferedWriter writerRpaSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSigns.txt")));
         ) {
             for (RoadSign s : roadSigns.values()) {
 
-                RpaSignDesc rpaSignDesc = s.getRpaSign().description();
+                //RpaSignDesc rpaSignDesc = s.getRpaSign().description();
+                //int numRules = rpaSignDesc.getRpaSignDescRules().size();
 
-                int numRules = rpaSignDesc.getRpaSignDescRules().size();
-
-                if (numRules > 1) {
+                //if (numRules > 1) {
                     writerRoadSigns.write(s + "\n");
                     RpaSign rpaSign = s.getRpaSign();
                     writerRpaSigns.write(formatLineRpaSing(rpaSign.toString()) + "\n");
-                }
+                //}
             }
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }
-
-        // Define script path and arguments
-        String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/format_rpasigns.sh";
-        String targetFiles = "src/main/resources/quebec/montreal/output/RpaSigns.txt";
-
-        // Execute the script with arguments
-        executeScript(scriptPath, targetFiles);
     }
 
-
-    private static void getRpaCodeEnumes(SortedMap<Long, RoadSign> roadSigns) {
-
-        String RpaSignCodeEnumTop = """
-                // License: GPL-3.0. For details, see README.md file.
-                                
-                package org.jroadsign.quebec.montreal.src.rpasign;
-                                
-                public enum RpaSignCode {
-                """;
-
-        String RpaSignCodeEnumBottom = """
-                    
-                    NULL(null);  // Special enum instance to represent null or unknown state
-                 
-                     private final String code;
-                 
-                     RpaSignCode(String code) {
-                         this.code = code;
-                     }
-                 
-                     public static RpaSignCode fromString(String code) {
-                         if (code == null) {
-                             return NULL;  // Return NULL instance for null inputs
-                         }
-                         for (RpaSignCode rpaSignCode : RpaSignCode.values()) {
-                             if (rpaSignCode.code != null && rpaSignCode.code.equalsIgnoreCase(code)) {
-                                 return rpaSignCode;
-                             }
-                         }
-                         return NULL;  // Return NULL if no match is found
-                     }
-                 
-                     public String getCode() {
-                         return code;
-                     }
-                }
-                """;
-
-        File DIR_FOR_ENUM_FILE = new File("src/main/java/org/jroadsign/quebec/montreal/src/rpasign");
-        // Use of a TreeSet to store unique, sorted codes
-        Set<String> uniqueCodes = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-
-        // Collect unique codes
-        for (RoadSign s : roadSigns.values()) {
-            String code = s.getRpaSign().code();
-            uniqueCodes.add(code.toUpperCase()
-                    .replace("-", "_")
-                    .replace("+", "_plus_")
-                    + "(\"" + code + "\"),");
-        }
-
-        // Write to files
-        try (
-                BufferedWriter writerRpaSignCodeJava =
-                        new BufferedWriter(new FileWriter(new File(DIR_FOR_ENUM_FILE, "RpaSignCode.java")));
-                BufferedWriter writerRpaSignCodeTxt =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignCode.txt")));
-        ) {
-            writerRpaSignCodeJava.write(RpaSignCodeEnumTop);
-
-            // Iterate over the unique, sorted codes
-            for (String code : uniqueCodes) {
-                writerRpaSignCodeJava.write("\n\t" + code);
-                writerRpaSignCodeTxt.write(code + "\n");
-            }
-
-            writerRpaSignCodeJava.write(RpaSignCodeEnumBottom);
-        } catch (IOException e) {
-            LOGGER.severe("Error writing to output file: " + e.getMessage());
-        }
-
-        // Define script path and arguments
-        String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
-        String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignCode.txt";
-
-        // Execute the script with arguments
-        executeScript(scriptPath, targetFiles);
-    }
 
     public static void main(String[] args) {
         // This main method is for debugging purposes.
@@ -249,9 +161,8 @@ public class Main {
 
         SortedMap<Long, RoadSign> roadSigns = prepareRoadSignData();
 
-//        debugRpaSignDescription(roadSigns);
-//        debugRoadSign(roadSigns);
-        getRpaCodeEnumes(roadSigns);
+        debugRpaSignDescription(roadSigns);
+        debugRoadSign(roadSigns);
     }
 
 }
