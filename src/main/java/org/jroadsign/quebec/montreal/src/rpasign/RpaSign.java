@@ -2,12 +2,12 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign;
 
-import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescription;
+import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
 
 /**
  * Represents an RPA (Regulation Par Arrondissement) of Sign record with ID, description, and code.
  */
-public record RpaSign(long idRpaSign, RpaSignDescription descriptionRpaSign, String codeRpaSign) {
+public record RpaSign(long idRpaSign, RpaSignDesc descriptionRpaSign, String codeRpaSign) {
 
     @Override
     public String toString() {

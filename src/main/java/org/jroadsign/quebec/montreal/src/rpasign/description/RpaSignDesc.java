@@ -3,44 +3,60 @@
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
-import org.jroadsign.quebec.montreal.src.rpasign.description.common.ParseFunctions;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RpaSignDescription {
-    private String stringDescription;
+public class RpaSignDesc {
+    private final String stringDescription;
     private List<RpaSignDescRule> rpaSignDescRules;
     private List<String> additionalMetaDataList;
 
 
     private static final String DESC_RULE_PATTERN =
-            String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\\\s*", "\\\\s*(AU?|-)\\\\s*") + "\\s*"
-                    + GlobalConfigs.WEEKLY_DAYS_RANGE_EXPRESSION_PATTERN + "*\\s*"
+            String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\s*", "\\s*(AU?|-)\\s*") + "\\s*"
+                    + GlobalConfigs.WEEKLY_DAYS_RANGE_EXPRESSION_PATTERN + "\\s*"
                     + GlobalConfigs.ANNUAL_MONTH_RANGE_PATTERN + "\\s*";
     private static final String COMBINED_DESC_RULE_PATTERN = DESC_RULE_PATTERN + "(," + DESC_RULE_PATTERN + ")*";
     private static final Pattern COMPILED_COMBINED_DESC_RULE_PATTERN = Pattern.compile(
             "\\b" + COMBINED_DESC_RULE_PATTERN + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
 
-    public RpaSignDescription(String sDescription) {
+    public RpaSignDesc(String sDescription) {
+        if (sDescription == null) throw new IllegalArgumentException("sDescriptions cannot be null");
+
         stringDescription = sDescription;
         rpaSignDescRules = new ArrayList<>();
+        additionalMetaDataList = new ArrayList<>();
 
-        String sDesc = ParseFunctions.cleanDescription(sDescription);
-        Matcher matcherCombinedRules = COMPILED_COMBINED_DESC_RULE_PATTERN.matcher(sDesc);
+        String descRule = RoadSignDescCleaner.cleanDescription(sDescription);
+        rpaSignDescRules.add(new RpaSignDescRule(descRule));
 
-        if (matcherCombinedRules.find()) {
-            for (String descRule : sDesc.split(",")) {
-                rpaSignDescRules.add(new RpaSignDescRule(descRule.trim()));
+
+        String addInfo = rpaSignDescRules.get(0).getRuleAdditionalMetaData();
+        if (addInfo != null) {
+            additionalMetaDataList.add(addInfo);
+        }
+    }
+
+    public RpaSignDesc(List<String> sDescriptions) {
+        if (sDescriptions == null) throw new IllegalArgumentException("sDescriptions cannot be null");
+
+        StringBuilder descBuilder = new StringBuilder();
+        rpaSignDescRules = new ArrayList<>();
+        additionalMetaDataList = new ArrayList<>();
+
+        for (String desc : sDescriptions) {
+            if (desc != null) {
+                descBuilder.append(desc);
+                String descRule = RoadSignDescCleaner.cleanDescription(desc);
+                rpaSignDescRules.add(new RpaSignDescRule(descRule));
             }
-        } else {
-            rpaSignDescRules.add(new RpaSignDescRule(sDesc.trim()));
         }
 
-        additionalMetaDataList = new ArrayList<>();
+        stringDescription = descBuilder.toString();
+
         for (RpaSignDescRule rule : rpaSignDescRules) {
             if (rule.getRuleAdditionalMetaData() != null) {
                 additionalMetaDataList.add(rule.getRuleAdditionalMetaData());
@@ -63,7 +79,7 @@ public class RpaSignDescription {
 
     @Override
     public String toString() {
-        return "RpaSignDescription{" +
+        return "RpaSignDesc{" +
                 "stringDescription='" + stringDescription + '\'' +
                 ", rpaSignDescRules=" + rpaSignDescRules +
                 ", additionalMetaData='" + additionalMetaDataList + '\'' +

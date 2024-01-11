@@ -30,29 +30,29 @@ public class RpaSignDescRule {
     }
 
     public RpaSignDescRule(String sDescription) {
-        RpaSignDescriptionParser rpaSignDescriptionParser = new RpaSignDescriptionParser(sDescription);
-        initDurationMinutesList(rpaSignDescriptionParser);
-        initDailyTimeRangeList(rpaSignDescriptionParser);
-        initWeeklyDays(rpaSignDescriptionParser);
-        initAnnualMonthRangeList(rpaSignDescriptionParser);
-        if (rpaSignDescriptionParser.getAdditionalInfo() != null) {
-            ruleAdditionalMetaData = rpaSignDescriptionParser.getAdditionalInfo();
+        RpaSignDescParser rpaSignDescParser = new RpaSignDescParser(sDescription);
+        initDurationMinutesList(rpaSignDescParser);
+        initDailyTimeRangeList(rpaSignDescParser);
+        initWeeklyDays(rpaSignDescParser);
+        initAnnualMonthRangeList(rpaSignDescParser);
+        if (rpaSignDescParser.getAdditionalInfo() != null) {
+            ruleAdditionalMetaData = rpaSignDescParser.getAdditionalInfo();
         }
     }
 
-    private void initDurationMinutesList(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getDurationMinutes() != null) {
+    private void initDurationMinutesList(RpaSignDescParser rpaSignDescParser) {
+        if (rpaSignDescParser.getDurationMinutes() != null) {
             durationMinutesList = new ArrayList<>();
-            String[] tabDurationsMinutes = rpaSignDescriptionParser.getDurationMinutes().split(";");
+            String[] tabDurationsMinutes = rpaSignDescParser.getDurationMinutes().split(";");
             for (String element : tabDurationsMinutes)
                 durationMinutesList.add(new DurationMinutes(element));
         }
     }
 
-    private void initDailyTimeRangeList(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getDailyTimeRange() != null) {
+    private void initDailyTimeRangeList(RpaSignDescParser rpaSignDescParser) {
+        if (rpaSignDescParser.getDailyTimeRange() != null) {
             dailyTimeRangeList = new ArrayList<>();
-            String[] tabDailyTimeRanges = rpaSignDescriptionParser.getDailyTimeRange().split(";");
+            String[] tabDailyTimeRanges = rpaSignDescParser.getDailyTimeRange().split(";");
             for (String element : tabDailyTimeRanges) {
                 try {
                     dailyTimeRangeList.add(new DailyTimeRange(element));
@@ -78,16 +78,16 @@ public class RpaSignDescRule {
         }
     }
 
-    private void initWeeklyDays(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getWeeklyDayRange() != null) {
-            weeklyDays = new WeeklyDays(rpaSignDescriptionParser.getWeeklyDayRange());
+    private void initWeeklyDays(RpaSignDescParser rpaSignDescParser) {
+        if (rpaSignDescParser.getWeeklyDayRange() != null) {
+            weeklyDays = new WeeklyDays(rpaSignDescParser.getWeeklyDayRange());
         }
     }
 
-    private void initAnnualMonthRangeList(RpaSignDescriptionParser rpaSignDescriptionParser) {
-        if (rpaSignDescriptionParser.getAnnualMonthRange() != null) {
+    private void initAnnualMonthRangeList(RpaSignDescParser rpaSignDescParser) {
+        if (rpaSignDescParser.getAnnualMonthRange() != null) {
             annualMonthRangeList = new ArrayList<>();
-            String[] tabAnnualMonthRanges = rpaSignDescriptionParser.getAnnualMonthRange().split(";");
+            String[] tabAnnualMonthRanges = rpaSignDescParser.getAnnualMonthRange().split(";");
             for (String element : tabAnnualMonthRanges) {
                 try {
                     annualMonthRangeList.add(new AnnualMonthRange(element));

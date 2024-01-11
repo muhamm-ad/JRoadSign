@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * (duration, day range, week range, year range, and additional informations).
  * It uses regular expressions to extract this information from the input string.
  */
-public class RpaSignDescriptionParser {
+public class RpaSignDescParser {
 
     private String durationMinutes;
     private String dailyTimeRange;
@@ -28,7 +28,7 @@ public class RpaSignDescriptionParser {
      *
      * @param description The description to be parsed
      */
-    public RpaSignDescriptionParser(String description) {
+    public RpaSignDescParser(String description) {
         additionalInfo = description;
         extractInformations(description);
     }
@@ -136,7 +136,7 @@ public class RpaSignDescriptionParser {
 
     @Override
     public String toString() {
-        return "RpaSignDescriptionParser{" +
+        return "RpaSignDescParser{" +
                 "durationMinutes='" + durationMinutes + '\'' +
                 ", dailyTimeRange='" + dailyTimeRange + '\'' +
                 ", weeklyDayRange='" + weeklyDayRange + '\'' +

@@ -1,54 +1,52 @@
 // License: GPL-3.0. For details, see README.md file.
 
-package org.jroadsign.quebec.montreal.src.rpasign.description.common;
+package org.jroadsign.quebec.montreal.src.rpasign.description;
+
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ParseFunctions {
+public class RoadSignDescCleaner {
 
-    private ParseFunctions() {
+    private RoadSignDescCleaner() {
     }
 
     /**
-     * This method cleans up the description string before processing.
+     * This method cleans up the given description by performing several operations on it.
      * It normalizes the string to upper case, removes possible prefixes, extra spaces, unwanted characters,
-     * misspellings, and adds spaces between letters and numbers if required.
+     * misspellings, and adds spaces where needed.
      *
      * @param description The original description to be cleaned.
      * @return A cleaned version of the original description.
      */
     public static String cleanDescription(String description) {
         String cleanedDescription = description.toUpperCase().trim();
+        cleanedDescription = removeUnnecessaryCharacters(cleanedDescription);
 
-        // Remove possible prefixes (for road sign S type only)
-        cleanedDescription = cleanedDescription
-                .replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
+        //cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
+        cleanedDescription = correctSpelling(cleanedDescription);
+        cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
+        return cleanedDescription;
+    }
+
+    /**
+     * This method removes unnecessary characters from the given description.
+     *
+     * @param description The original description to be cleaned.
+     * @return A cleaned version of the original description.
+     */
+    private static String removeUnnecessaryCharacters(String description) {
+        return description.replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
                 .replace("\\P", "")
                 .replace("/P", "")
-                .replaceAll("\\s+", " "); // remove extra spaces
-
-        // Remove unwanted characters and misspellings
-        cleanedDescription = cleanedDescription
+                .replaceAll("\\s+", " ")
                 .replace(".", "")
-                //.replace(",", "")
                 .replace("É", "E")
                 .replace("È", "E")
                 .replace("À", "A")
                 .replace("1ER", "1");
-
-        // Reformat day time range
-        //cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
-
-        cleanedDescription = correctSpelling(cleanedDescription);
-        // Add space between a letter and a number if there isn't one
-        cleanedDescription = insertSpaceBetweenLetterAndNumber(cleanedDescription);
-        // Add space between day number and month abbreviation if necessary
-        cleanedDescription = insertSpaceBetweenDayAndMonth(cleanedDescription);
-
-        return cleanedDescription;
     }
-
 
     /**
      * This method reformats time range string in the description.
@@ -118,6 +116,18 @@ public class ParseFunctions {
                 .replace("MRS", GlobalConfigs.MARCH)
                 .replace("MARSL", GlobalConfigs.MARCH)
                 .replace("VEMDREDI", GlobalConfigs.FRIDAY);
+    }
+
+    /**
+     * This method inserts spaces where needed in the given description.
+     *
+     * @param description The original description.
+     * @return The description with spaces added where needed.
+     */
+    private static String insertSpacesWhereNeeded(String description) {
+        description = insertSpaceBetweenLetterAndNumber(description);
+        description = insertSpaceBetweenDayAndMonth(description);
+        return description;
     }
 
     /**
