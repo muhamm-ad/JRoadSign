@@ -10,9 +10,9 @@ format_line() {
     line=$(echo "$line" | sed -r 's/(\})/ \}/g')
 
     # Indent specific fields
-    line=$(echo "$line" | sed -r 's/idRpaSign/\n\tidRpaSign/g')
+    line=$(echo "$line" | sed -r 's/id/\n\tid/g')
 
-    line=$(echo "$line" | sed -r 's/descriptionRpaSign/\n\tdescriptionRpaSign/g')
+    line=$(echo "$line" | sed -r 's/description/\n\tdescription/g')
     line=$(echo "$line" | sed -r 's/stringDescription/\n\t\tstringDescription/g')
     line=$(echo "$line" | sed -r 's/durationMinutesList/\n\t\tdurationMinutesList/g')
 
@@ -25,7 +25,7 @@ format_line() {
     line=$(echo "$line" | sed -r 's/AnnualMonthRange/\n\t\t\t\t\AnnualMonthRange/g')
 
     line=$(echo "$line" | sed -r 's/additionalMetaData/\n\t\tadditionalMetaData/g')
-    line=$(echo "$line" | sed -r 's/codeRpaSign/\n\tcodeRpaSign/g')
+    line=$(echo "$line" | sed -r 's/code/\n\tcode/g')
 
     line=$(echo "$line" | sed -r "s/' \},/'\n\t\}/g")
     line=$(echo "$line" | sed -r "s/' \}/'\n\}/g")

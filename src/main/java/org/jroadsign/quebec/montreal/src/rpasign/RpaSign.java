@@ -7,14 +7,14 @@ import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
 /**
  * Represents an RPA (Regulation Par Arrondissement) of Sign record with ID, description, and code.
  */
-public record RpaSign(long idRpaSign, RpaSignDesc descriptionRpaSign, String codeRpaSign) {
+public record RpaSign(long id, RpaSignDesc description, String code) {
 
     @Override
     public String toString() {
         return "RpaSign{" +
-                "idRpaSign=" + idRpaSign +
-                ", descriptionRpaSign=" + descriptionRpaSign +
-                ", codeRpaSign='" + codeRpaSign + '\'' +
+                "id=" + id +
+                ", description=" + description +
+                ", code='" + code + '\'' +
                 '}';
     }
 }
