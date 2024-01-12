@@ -4,7 +4,9 @@ import org.jroadsign.quebec.montreal.src.MontrealRoadPostSignsGeojsonReader;
 import org.jroadsign.quebec.montreal.src.RoadSign;
 import org.jroadsign.quebec.montreal.src.rpasign.RpaSign;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RoadSignDescCleaner;
+import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescParser;
+import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescRule;
 
 import java.io.*;
 import java.util.HashMap;
@@ -128,7 +130,9 @@ public class Main {
                 .replace("],", "\n\t\t\t\t\t],")
                 .replace("{", " {")
                 .replace("]\n\t\tadditionalMetaData", "],\n\t\tadditionalMetaData")
-                .replace("RpaSign{", "],\nRpaSign{");
+                .replace("RpaSign{", "],\nRpaSign{")
+
+                .replace("'null'", "null");
     }
 
     private static void debugRoadSign(SortedMap<Long, RoadSign> roadSigns) {
@@ -138,14 +142,27 @@ public class Main {
         ) {
             for (RoadSign s : roadSigns.values()) {
 
-                //RpaSignDesc rpaSignDesc = s.getRpaSign().description();
-                //int numRules = rpaSignDesc.getRpaSignDescRules().size();
+                RpaSignDesc rpaSignDesc = s.getRpaSign().getDescription();
+                int numRules = rpaSignDesc.getRpaSignDescRules().size();
+                boolean boolWrite = false;
+                if (numRules >= 1) {
+                    for (RpaSignDescRule rules : rpaSignDesc.getRpaSignDescRules()) {
+                        int numDurationMinutes = rules.getDurationMinutesList().size();
+                        int numDailyTimeRanges = rules.getDailyTimeRangeList().size();
+                        int numAnnualMonthRanges = rules.getAnnualMonthRangeList().size();
 
-                //if (numRules > 1) {
-                    writerRoadSigns.write(s + "\n");
-                    RpaSign rpaSign = s.getRpaSign();
-                    writerRpaSigns.write(formatLineRpaSing(rpaSign.toString()) + "\n");
-                //}
+                        if (numDurationMinutes > 1 || numDailyTimeRanges > 1 || numAnnualMonthRanges > 1) {
+                            //if (s.getRpaSign().getStringCode().equalsIgnoreCase("SLR-ST-75"))
+                            boolWrite = true;
+                        }
+                    }
+                    if (boolWrite) {
+                        writerRoadSigns.write(s + "\n");
+                        RpaSign rpaSign = s.getRpaSign();
+                        writerRpaSigns.write(formatLineRpaSing(rpaSign.toString()) + "\n");
+                    }
+                }
+
             }
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());

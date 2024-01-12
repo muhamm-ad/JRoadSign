@@ -40,27 +40,40 @@ public class RpaSignDesc {
         }
     }
 
-    public RpaSignDesc(List<String> sDescriptions) {
-        if (sDescriptions == null) throw new IllegalArgumentException("sDescriptions cannot be null");
-
+    public RpaSignDesc(List<String> signDescriptions) {
+        if (signDescriptions == null) throw new IllegalArgumentException("sDescriptions cannot be null");
         StringBuilder descBuilder = new StringBuilder();
         rpaSignDescRules = new ArrayList<>();
         additionalMetaDataList = new ArrayList<>();
+        processSignDescriptions(signDescriptions, descBuilder);
 
-        for (String desc : sDescriptions) {
+        stringDescription = descBuilder.toString();
+        for (RpaSignDescRule rule : rpaSignDescRules) {
+            addAdditionalMetaData(rule);
+        }
+    }
+
+    public RpaSignDesc(List<String> signDescriptions, String stringDescription) {
+        if (signDescriptions == null) throw new IllegalArgumentException("sDescriptions cannot be null");
+        this.stringDescription = stringDescription;
+        rpaSignDescRules = new ArrayList<>();
+        additionalMetaDataList = new ArrayList<>();
+        processSignDescriptions(signDescriptions, null);
+    }
+
+    private void processSignDescriptions(List<String> signDescriptions, StringBuilder descBuilder) {
+        for (String desc : signDescriptions) {
             if (desc != null) {
-                descBuilder.append(desc);
+                if (descBuilder != null) descBuilder.append(desc);
                 String descRule = RoadSignDescCleaner.cleanDescription(desc);
                 rpaSignDescRules.add(new RpaSignDescRule(descRule));
             }
         }
+    }
 
-        stringDescription = descBuilder.toString();
-
-        for (RpaSignDescRule rule : rpaSignDescRules) {
-            if (rule.getRuleAdditionalMetaData() != null) {
-                additionalMetaDataList.add(rule.getRuleAdditionalMetaData());
-            }
+    private void addAdditionalMetaData(RpaSignDescRule rule) {
+        if (rule.getRuleAdditionalMetaData() != null) {
+            additionalMetaDataList.add(rule.getRuleAdditionalMetaData());
         }
     }
 

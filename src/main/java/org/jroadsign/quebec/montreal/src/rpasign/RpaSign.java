@@ -4,6 +4,8 @@ package org.jroadsign.quebec.montreal.src.rpasign;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
 
+import java.util.List;
+
 /**
  * Represents an RPA (Regulation Par Arrondissement) of Sign with ID, description, and code.
  */
@@ -26,8 +28,13 @@ public class RpaSign {
     }
 
     private void initDescription(String description) {
-        // TODO: Split description depending on the code
-        this.description = new RpaSignDesc(description);
+        switch (code) {
+            case SLR_ST_75:
+                this.description = new RpaSignDesc(List.of(description.split(",")), description);
+                break;
+            default:
+                this.description = new RpaSignDesc(description);
+        }
     }
 
     public long getId() {
