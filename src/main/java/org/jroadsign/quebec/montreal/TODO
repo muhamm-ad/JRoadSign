@@ -1,8 +1,4 @@
-- [ ] Refactor RpaSignDescriptionParser class for improved readability and maintainability. Break down the class into
-    smaller classes (`RoadSignDescription` and `RoadSignDescriptionMatcher`) each with their specific roles to adhere
-    better to the Single Responsibility Principle.
-    This is expected to improve code maintainability, testing, and readability.
-
 - [ ] Add docstrings to all RpaSign classes for better code comprehension and maintainability.
 
-- [ ]
+- [ ] Add a variable into the RpaDescRule class for managing whether it's either a Parking or Non-Parking scenario.
+
