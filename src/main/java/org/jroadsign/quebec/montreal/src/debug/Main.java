@@ -143,18 +143,12 @@ public class Main {
             for (RoadSign s : roadSigns.values()) {
 
                 RpaSignDesc rpaSignDesc = s.getRpaSign().getDescription();
-                int numRules = rpaSignDesc.getRpaSignDescRules().size();
                 boolean boolWrite = false;
-                if (numRules >= 1) {
                     for (RpaSignDescRule rules : rpaSignDesc.getRpaSignDescRules()) {
-                        int numDurationMinutes = rules.getDurationMinutesList().size();
                         int numDailyTimeRanges = rules.getDailyTimeRangeList().size();
-                        int numAnnualMonthRanges = rules.getAnnualMonthRangeList().size();
-
-                        if (numDurationMinutes > 1 || numDailyTimeRanges > 1 || numAnnualMonthRanges > 1) {
-                            //if (s.getRpaSign().getStringCode().equalsIgnoreCase("SLR-ST-75"))
+//                        if (numDailyTimeRanges > 1 && (rules.getWeeklyDays() != null && !rules.getWeeklyDays().isEmpty())) {
                             boolWrite = true;
-                        }
+//                        }
                     }
                     if (boolWrite) {
                         writerRoadSigns.write(s + "\n");
@@ -163,7 +157,6 @@ public class Main {
                     }
                 }
 
-            }
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }

@@ -4,6 +4,7 @@ package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalFunctions;
+import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.WeeklyRangeExpException;
 
 import java.time.DayOfWeek;
 import java.util.EnumSet;
@@ -25,7 +26,7 @@ public class WeeklyDays {
         this.days = EnumSet.noneOf(DayOfWeek.class);
     }
 
-    public WeeklyDays(String sWeeklyDays) {
+    public WeeklyDays(String sWeeklyDays) throws WeeklyRangeExpException {
         validateStringInput(sWeeklyDays);
 
         this.days = EnumSet.noneOf(DayOfWeek.class);
@@ -33,12 +34,16 @@ public class WeeklyDays {
 
         if (processElements(elements)) {
             initializeFromExpression(WeekRangeExpression.ALL_TIMES_EXCEPT);
+            throw new WeeklyRangeExpException(WeekRangeExpression.ALL_TIMES_EXCEPT, this);
         }
     }
 
-    public WeeklyDays(WeekRangeExpression expression) {
+    public WeeklyDays(WeekRangeExpression expression) throws WeeklyRangeExpException {
         this.days = EnumSet.noneOf(DayOfWeek.class);
         initializeFromExpression(expression);
+        if (expression == WeekRangeExpression.ALL_TIMES_EXCEPT) {
+            throw new WeeklyRangeExpException(WeekRangeExpression.ALL_TIMES_EXCEPT, this);
+        }
     }
 
     private void validateStringInput(String input) {
@@ -108,6 +113,10 @@ public class WeeklyDays {
 
     public boolean contains(DayOfWeek day) {
         return this.days.contains(day);
+    }
+
+    public boolean isEmpty() {
+        return this.days.isEmpty();
     }
 
     @Override

@@ -2,26 +2,13 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
-import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class RpaSignDesc {
     private final String stringDescription;
     private List<RpaSignDescRule> rpaSignDescRules;
     private List<String> additionalMetaDataList;
-
-
-    private static final String DESC_RULE_PATTERN =
-            String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\s*", "\\s*(AU?|-)\\s*") + "\\s*"
-                    + GlobalConfigs.WEEKLY_DAYS_RANGE_EXPRESSION_PATTERN + "\\s*"
-                    + GlobalConfigs.ANNUAL_MONTH_RANGE_PATTERN + "\\s*";
-    private static final String COMBINED_DESC_RULE_PATTERN = DESC_RULE_PATTERN + "(," + DESC_RULE_PATTERN + ")*";
-    private static final Pattern COMPILED_COMBINED_DESC_RULE_PATTERN = Pattern.compile(
-            "\\b" + COMBINED_DESC_RULE_PATTERN + "\\b", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-
 
     public RpaSignDesc(String sDescription) {
         if (sDescription == null) throw new IllegalArgumentException("sDescriptions cannot be null");
@@ -32,7 +19,6 @@ public class RpaSignDesc {
 
         String descRule = RoadSignDescCleaner.cleanDescription(sDescription);
         rpaSignDescRules.add(new RpaSignDescRule(descRule));
-
 
         String addInfo = rpaSignDescRules.get(0).getRuleAdditionalMetaData();
         if (addInfo != null) {
