@@ -2,6 +2,7 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.AllTimeExceptException;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
 
 import java.time.LocalTime;
@@ -33,8 +34,31 @@ public class RpaSignDescRule {
         RpaSignDescParser rpaSignDescParser = new RpaSignDescParser(sDescription);
         initDurationMinutesList(rpaSignDescParser);
         initDailyTimeRangeList(rpaSignDescParser);
-        initWeeklyDays(rpaSignDescParser);
+
+        try {
+            initWeeklyDays(rpaSignDescParser);
+        } catch (AllTimeExceptException e) {
+            weeklyDays = e.getWeeklyDaysInstance();
+
+            List<DailyTimeRange> pastDailyTimeRangeList = new ArrayList<>(dailyTimeRangeList);
+            dailyTimeRangeList.clear();
+
+            for (DailyTimeRange pastRange : pastDailyTimeRangeList) {
+                // REVIEW
+                Range<LocalTime> newRange1 = new Range<>(LocalTime.of(0, 0), pastRange.getStart());
+                Range<LocalTime> newRange2 = new Range<>(pastRange.getEnd(), LocalTime.of(23, 59));
+                try {
+                    dailyTimeRangeList.add(new DailyTimeRange(newRange1));
+                    dailyTimeRangeList.add(new DailyTimeRange(newRange2));
+                } catch (StartAfterEndException e2) {
+                    throw new IllegalArgumentException(String.format(
+                            DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG, newRange1 + " and/or " + newRange2));
+                }
+            }
+        }
+
         initAnnualMonthRangeList(rpaSignDescParser);
+
         if (rpaSignDescParser.getAdditionalInfo() != null) {
             ruleAdditionalMetaData = rpaSignDescParser.getAdditionalInfo();
         }
@@ -58,9 +82,9 @@ public class RpaSignDescRule {
                     dailyTimeRangeList.add(new DailyTimeRange(element));
                 } catch (StartAfterEndException e1) {
                     if (e1.getRange() != null && e1.getRange() instanceof Range<?>) {
-                        Range<LocalTime> lastRange = (Range<LocalTime>) e1.getRange();
-                        Range<LocalTime> newRange1 = new Range<>(lastRange.getStart(), LocalTime.of(23, 59));
-                        Range<LocalTime> newRange2 = new Range<>(LocalTime.of(0, 0), lastRange.getEnd());
+                        Range<LocalTime> pastRange = (Range<LocalTime>) e1.getRange();
+                        Range<LocalTime> newRange1 = new Range<>(pastRange.getStart(), LocalTime.of(23, 59));
+                        Range<LocalTime> newRange2 = new Range<>(LocalTime.of(0, 0), pastRange.getEnd());
                         try {
                             dailyTimeRangeList.add(new DailyTimeRange(newRange1));
                             dailyTimeRangeList.add(new DailyTimeRange(newRange2));
@@ -78,7 +102,7 @@ public class RpaSignDescRule {
         }
     }
 
-    private void initWeeklyDays(RpaSignDescParser rpaSignDescParser) {
+    private void initWeeklyDays(RpaSignDescParser rpaSignDescParser) throws AllTimeExceptException {
         if (rpaSignDescParser.getWeeklyDayRange() != null) {
             weeklyDays = new WeeklyDays(rpaSignDescParser.getWeeklyDayRange());
         }

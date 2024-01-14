@@ -37,7 +37,8 @@ public class RoadSignDescCleaner {
      * @return A cleaned version of the original description.
      */
     private static String removeUnnecessaryCharacters(String description) {
-        return description.replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
+        return description
+                .replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
                 .replace("\\P", "")
                 .replace("/P", "")
                 .replaceAll("\\s+", " ")
