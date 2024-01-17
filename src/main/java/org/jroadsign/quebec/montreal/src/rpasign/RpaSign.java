@@ -32,6 +32,9 @@ public class RpaSign {
             case SLR_ST_75:
                 this.description = new RpaSignDesc(List.of(description.split(",")), description);
                 break;
+            case SLR_ST_111:
+                this.description = new RpaSignDesc(List.of(description.split(" - ")), description);
+                break;
             default:
                 this.description = new RpaSignDesc(description);
         }

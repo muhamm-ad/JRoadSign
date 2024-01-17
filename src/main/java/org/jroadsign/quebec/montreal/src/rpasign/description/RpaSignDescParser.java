@@ -243,7 +243,7 @@ public class RpaSignDescParser {
         Matcher matcher = pattern.matcher(range);
         StringBuilder sb = new StringBuilder();
 
-        while (matcher.find()) {
+        if (matcher.find()) {
             String startMonth = matcher.group(1);
             String startDay = matcher.group(2) != null ? matcher.group(2) : "1";
             String endMonth = matcher.group(3);

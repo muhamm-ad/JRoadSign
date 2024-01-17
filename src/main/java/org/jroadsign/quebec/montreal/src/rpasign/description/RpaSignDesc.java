@@ -51,7 +51,7 @@ public class RpaSignDesc {
         for (String desc : signDescriptions) {
             if (desc != null) {
                 if (descBuilder != null) descBuilder.append(desc);
-                String descRule = RoadSignDescCleaner.cleanDescription(desc);
+                String descRule = RoadSignDescCleaner.cleanDescription(desc.trim());
                 rpaSignDescRules.add(new RpaSignDescRule(descRule));
             }
         }

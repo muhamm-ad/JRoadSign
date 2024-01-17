@@ -4,9 +4,7 @@ import org.jroadsign.quebec.montreal.src.MontrealRoadPostSignsGeojsonReader;
 import org.jroadsign.quebec.montreal.src.RoadSign;
 import org.jroadsign.quebec.montreal.src.rpasign.RpaSign;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RoadSignDescCleaner;
-import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescParser;
-import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescRule;
 
 import java.io.*;
 import java.util.HashMap;
@@ -90,7 +88,7 @@ public class Main {
                     writer_months.write(rpaSignDes.getAnnualMonthRange() + "\n");
                 }
                 if (rpaSignDes.getAdditionalInfo() != null && !rpaSignDes.getAdditionalInfo().isEmpty()) {
-                    //writer_additionalMetaData.write(sDescription + "\t==>\t");
+                    writer_additionalMetaData.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
                     writer_additionalMetaData.write(rpaSignDes.getAdditionalInfo() + "\n");
                 }
             }
@@ -142,21 +140,21 @@ public class Main {
         ) {
             for (RoadSign s : roadSigns.values()) {
 
-                RpaSignDesc rpaSignDesc = s.getRpaSign().getDescription();
-                boolean boolWrite = false;
-                    for (RpaSignDescRule rules : rpaSignDesc.getRpaSignDescRules()) {
-                        int numDailyTimeRanges = rules.getDailyTimeRangeList().size();
-//                        if (numDailyTimeRanges > 1 && (rules.getWeeklyDays() != null && !rules.getWeeklyDays().isEmpty())) {
-                            boolWrite = true;
-//                        }
-                    }
-                    if (boolWrite) {
-                        writerRoadSigns.write(s + "\n");
-                        RpaSign rpaSign = s.getRpaSign();
-                        writerRpaSigns.write(formatLineRpaSing(rpaSign.toString()) + "\n");
-                    }
+//                RpaSignDesc rpaSignDesc = s.getRpaSign().getDescription();
+//                boolean boolWrite = false;
+//                for (RpaSignDescRule rules : rpaSignDesc.getRpaSignDescRules()) {
+//                    //int numDailyTimeRanges = rules.getDailyTimeRangeList().size();
+//                    //if (numDailyTimeRanges > 1 && (rules.getWeeklyDays() != null && !rules.getWeeklyDays().isEmpty())) {
+//                        boolWrite = true;
+//                    //}
+//                }
+//                if (boolWrite) {
+                if (s.getRpaSign().getStringCode().equalsIgnoreCase("SLR-ST-111")) {
+                    writerRoadSigns.write(s + "\n");
+                    RpaSign rpaSign = s.getRpaSign();
+                    writerRpaSigns.write(formatLineRpaSing(rpaSign.toString()) + "\n");
                 }
-
+            }
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }

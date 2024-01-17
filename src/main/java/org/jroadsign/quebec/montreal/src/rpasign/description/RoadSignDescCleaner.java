@@ -4,6 +4,9 @@ package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,7 +27,7 @@ public class RoadSignDescCleaner {
         String cleanedDescription = description.toUpperCase().trim();
         cleanedDescription = removeUnnecessaryCharacters(cleanedDescription);
 
-        //cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
+        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
         cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
         return cleanedDescription;
@@ -50,60 +53,80 @@ public class RoadSignDescCleaner {
     }
 
     /**
-     * This method reformats time range string in the description.
-     * It is used to fix intervals like "SAM 17H A LUN 17H".
+     * This method reformats the time range string in the description.
+     * It is used to fix intervals like "SAM 17H A LUN 17H"
+     * to something like "17H-23H59 SAM; 00H-23H59 DIM; 00H-17H LUN"
      *
      * @param description The original description.
-     * @return The description with day-hour string reformatted.
+     * @return The description with the day-hour string reformatted.
      */
     private static String reformatDailyTimeIntervals(String description) {
 
-        // FIXME: intervals like SAM 17H A LUN 17H
+        String timePattern = "\\d{1,2}\\s*H\\s*(?:\\d{1,2})?"; // UPDATE: use the global variable
 
-        // Define a regex pattern for "DAY HOUR A DAY HOUR"
-        String formattedTimePattern = String.format(GlobalConfigs.TIME_PATTERN, "\\\\s*");
-        // String formattedWeeklyDayPattern = String.format(GlobalConfigs.TIME_PATTERN, "\\\\s*");
-        String dayHourRegex =
-                GlobalConfigs.WEEKLY_DAYS_PATTERN + formattedTimePattern
-                        + "\\s*A\\s*" + GlobalConfigs.WEEKLY_DAYS_PATTERN + formattedTimePattern +
-                        "|" + formattedTimePattern + GlobalConfigs.WEEKLY_DAYS_PATTERN
-                        + "\\s*A\\s*" + formattedTimePattern + GlobalConfigs.WEEKLY_DAYS_PATTERN;
+        String formattedTimePattern = "(" + String.format(timePattern, "\\s*") + ")";
+        String formattedWeeklyDayPattern = "(" + GlobalConfigs.WEEKLY_DAYS_PATTERN + ")";
 
-        Pattern dayHourPattern = Pattern.compile(
-                dayHourRegex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        Pattern pattern = Pattern.compile(formattedTimePattern + "\\s*" + formattedWeeklyDayPattern
+                        + "\\s*(?:AU?)\\s*" + formattedTimePattern + formattedWeeklyDayPattern,
+                Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
+        );
 
-        Matcher dayHourMatcher = dayHourPattern.matcher(description);
-        while (dayHourMatcher.find()) {
-            String match = dayHourMatcher.group();
+        Matcher matcher = pattern.matcher(description);
+        StringBuilder sb = new StringBuilder();
 
-            String[] intervalParts = match.split(" A ");
-            // Trim the strings before further processing
-            intervalParts[0] = intervalParts[0].trim();
-            intervalParts[1] = intervalParts[1].trim();
+        if (matcher.find()) {
+            String startTime = matcher.group(1);
+            String startDay = matcher.group(2);
+            String endTime = matcher.group(3);
+            String endDay = matcher.group(4);
 
-            // Determine if the match is in the format "DAY HOUR" or "HOUR DAY"
-            boolean isDayHourFormat = Character.isLetter(intervalParts[0].charAt(0));
+            // Convert the days into an ordered list, for example ["SAM", "DIM", "LUN"] for "SAM" to "LUN"
+            List<String> days = getDaysInRange(startDay, endDay);
 
-            String[] startParts;
-            String[] endParts;
-
-            if (isDayHourFormat) {
-                startParts = intervalParts[0].split(" ");
-                endParts = intervalParts[1].split(" ");
-            } else {
-                startParts = new String[]{intervalParts[0].split(" ")[1], intervalParts[0].split(" ")[0]};
-                endParts = new String[]{intervalParts[1].split(" ")[1], intervalParts[1].split(" ")[0]};
+            for (int i = 0; i < days.size(); i++) {
+                if (i == 0) {
+                    sb.append(startTime).append("-23H59 ").append(days.get(i)).append("; ");
+                } else if (i == days.size() - 1) {
+                    sb.append("00H-").append(endTime).append(" ").append(days.get(i));
+                } else {
+                    sb.append("00H-23H59 ").append(days.get(i)).append("; ");
+                }
             }
-
-            String reformattedMatch = startParts[1] + " A 00H " + startParts[0]
-                    + " - " + "00H A " + endParts[1] + " " + endParts[0];
-
-            // Replace the original match with the reformatted match in the description
-            description = description.replaceFirst(dayHourRegex, reformattedMatch);
         }
 
-        return description;
+        return sb.toString();
     }
+
+    private static List<String> getDaysInRange(String startDay, String endDay) {
+        List<String> daysOfWeek = Arrays.asList("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM");
+        List<String> daysInRange = new ArrayList<>();
+
+        int startIndex = daysOfWeek.indexOf(startDay);
+        int endIndex = daysOfWeek.indexOf(endDay);
+
+        if (startIndex == -1 || endIndex == -1) {
+            throw new IllegalArgumentException("Invalid format of day of the week: " + startDay + ", " + endDay);
+        }
+
+        if (startIndex <= endIndex) {
+            // Case where the start day is before or the same as the end day in the week
+            for (int i = startIndex; i <= endIndex; i++) {
+                daysInRange.add(daysOfWeek.get(i));
+            }
+        } else {
+            // Case where the start day is after the end day (crossing the weekend)
+            for (int i = startIndex; i < daysOfWeek.size(); i++) {
+                daysInRange.add(daysOfWeek.get(i));
+            }
+            for (int i = 0; i <= endIndex; i++) {
+                daysInRange.add(daysOfWeek.get(i));
+            }
+        }
+
+        return daysInRange;
+    }
+
 
     /**
      * This method corrects misspelled names in the description.
