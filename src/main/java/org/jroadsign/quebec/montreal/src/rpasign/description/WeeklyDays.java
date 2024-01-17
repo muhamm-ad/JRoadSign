@@ -2,12 +2,14 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jetbrains.annotations.NotNull;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalFunctions;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.WeeklyRangeExpException;
 
 import java.time.DayOfWeek;
 import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,16 +22,16 @@ public class WeeklyDays {
             "^" + GlobalConfigs.WEEKLY_DAYS_RANGE_EXPRESSION_LITERAL_PATTERN + "$");
 
 
-    private EnumSet<DayOfWeek> days;
+    private Set<DayOfWeek> days;
 
     public WeeklyDays() {
-        this.days = EnumSet.noneOf(DayOfWeek.class);
+        this.days = new LinkedHashSet<>();
     }
 
-    public WeeklyDays(String sWeeklyDays) throws WeeklyRangeExpException {
+    public WeeklyDays(@NotNull String sWeeklyDays) throws WeeklyRangeExpException {
         validateStringInput(sWeeklyDays);
 
-        this.days = EnumSet.noneOf(DayOfWeek.class);
+        this.days = new LinkedHashSet<>();
         String[] elements = sWeeklyDays.split(";");
 
         if (processElements(elements)) {
@@ -38,8 +40,8 @@ public class WeeklyDays {
         }
     }
 
-    public WeeklyDays(WeekRangeExpression expression) throws WeeklyRangeExpException {
-        this.days = EnumSet.noneOf(DayOfWeek.class);
+    public WeeklyDays(@NotNull WeekRangeExpression expression) throws WeeklyRangeExpException {
+        this.days = new LinkedHashSet<>();
         initializeFromExpression(expression);
         if (expression == WeekRangeExpression.ALL_TIMES_EXCEPT) {
             throw new WeeklyRangeExpException(WeekRangeExpression.ALL_TIMES_EXCEPT, this);
@@ -53,7 +55,7 @@ public class WeeklyDays {
         }
     }
 
-    private boolean processElements(String[] elements) {
+    private boolean processElements(String @NotNull [] elements) {
         boolean isAllTimeExcept = false;
         for (String element : elements) {
             if (element.equalsIgnoreCase(GlobalConfigs.ALL_TIMES_EXCEPT)) {
@@ -65,7 +67,7 @@ public class WeeklyDays {
         return isAllTimeExcept;
     }
 
-    private void processElement(String element) {
+    private void processElement(@NotNull String element) {
         try {
             if (element.contains("-"))
                 handleInterval(element);
@@ -81,13 +83,13 @@ public class WeeklyDays {
         }
     }
 
-    private void initializeFromExpression(WeekRangeExpression expression) {
+    private void initializeFromExpression(@NotNull WeekRangeExpression expression) {
         switch (expression) {
             case ALL_TIMES -> this.days = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.SUNDAY);
             case SCHOOL_DAYS -> this.days = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.FRIDAY);
             case WEEK_END -> this.days = EnumSet.range(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
             case ALL_TIMES_EXCEPT -> {
-                EnumSet<DayOfWeek> allDays = EnumSet.allOf(DayOfWeek.class);
+                Set<DayOfWeek> allDays = EnumSet.allOf(DayOfWeek.class);
                 allDays.removeAll(this.days);
                 this.days = allDays; // Set 'this.days' to be the remaining days
             }
@@ -99,19 +101,19 @@ public class WeeklyDays {
         return this.days;
     }
 
-    public void setDays(EnumSet<DayOfWeek> days) {
+    public void setDays(@NotNull Set<DayOfWeek> days) {
         this.days = days;
     }
 
-    public void addDay(DayOfWeek day) {
+    public void addDay(@NotNull DayOfWeek day) {
         this.days.add(day);
     }
 
-    public void removeDay(DayOfWeek day) {
+    public void removeDay(@NotNull DayOfWeek day) {
         this.days.remove(day);
     }
 
-    public boolean contains(DayOfWeek day) {
+    public boolean contains(@NotNull DayOfWeek day) {
         return this.days.contains(day);
     }
 
@@ -124,7 +126,7 @@ public class WeeklyDays {
         return "WeeklyDays{" + days + '}';
     }
 
-    private void handleInterval(String interval) {
+    private void handleInterval(@NotNull String interval) {
         String[] daysInterval = interval.split("-");
         DayOfWeek start = GlobalFunctions.convertToDayOfWeek(daysInterval[0].trim());
         DayOfWeek end = GlobalFunctions.convertToDayOfWeek(daysInterval[1].trim());
@@ -144,7 +146,7 @@ public class WeeklyDays {
 
     private void handleDay(String dayStr) {
         DayOfWeek day = GlobalFunctions.convertToDayOfWeek(dayStr);
-        days.add(day);
+        this.days.add(day);
     }
 
 }
