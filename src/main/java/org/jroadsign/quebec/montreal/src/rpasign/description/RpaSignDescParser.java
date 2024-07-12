@@ -2,6 +2,7 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jetbrains.annotations.NotNull;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
 import java.util.Map;
@@ -20,7 +21,7 @@ public class RpaSignDescParser {
     private String dailyTimeRange;
     private String weeklyDayRange;
     private String annualMonthRange;
-    private String additionalInfo;
+    private final String additionalInfo;
 
     /**
      * Constructor to initialize the class with a given description,
@@ -29,8 +30,7 @@ public class RpaSignDescParser {
      * @param description The description to be parsed
      */
     public RpaSignDescParser(String description) {
-        additionalInfo = description;
-        extractInformations(description);
+        additionalInfo = cleanAdditionalInfo(extractInformations(description));
     }
 
     /**
@@ -39,7 +39,7 @@ public class RpaSignDescParser {
      *
      * @param description The description to be parsed
      */
-    private void extractInformations(String description) {
+    private String extractInformations(String description) {
         // Compile regular expressions for pattern matching
         Pattern parkingDurationPattern = Pattern.compile(
                 "\\b(" + String.format(GlobalConfigs.DURATION_PATTERN, "\\s*") + ")\\b",
@@ -78,7 +78,8 @@ public class RpaSignDescParser {
         standardizeDailyTimeRange();
         standardizeWeeklyDayRange();
         standardizeAnnualMonthRange();
-        cleanAdditionalInfo(description);
+
+        return description;
     }
 
 
@@ -133,7 +134,6 @@ public class RpaSignDescParser {
         return additionalInfo;
     }
 
-
     @Override
     public String toString() {
         return "RpaSignDescParser{" +
@@ -166,8 +166,8 @@ public class RpaSignDescParser {
         dailyTimeRange = dailyTimeRange
                 .replaceAll("A", "-")
                 .replaceAll("\\s+", "")
-                .replaceAll("24H(\\d{0,2})?", "23H$1")
-                // .replaceAll("H", ":") // TODO
+                .replaceAll("24H(\\d{1,2})", "00H$1")
+                .replaceAll("24H", "23H59")
                 .trim();
     }
 
@@ -237,7 +237,7 @@ public class RpaSignDescParser {
      * @param range The string containing the annual month range pattern to be standardized
      * @return The string with standardized annual month range pattern
      */
-    private String standardizeAnnualMonthRangePattern(String range) {
+    private @NotNull String standardizeAnnualMonthRangePattern(String range) {
         Pattern pattern = Pattern.compile(
                 GlobalConfigs.ANNUAL_MONTH_RANGE_PATTERN_SECOND, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
         Matcher matcher = pattern.matcher(range);
@@ -255,7 +255,6 @@ public class RpaSignDescParser {
 
         return sb.toString().trim();
     }
-
 
     /**
      * This method standardizes the annual month range in the description.
@@ -296,7 +295,7 @@ public class RpaSignDescParser {
      *
      * @param description The original description.
      */
-    private void cleanAdditionalInfo(String description) {
+    private String cleanAdditionalInfo(@NotNull String description) {
         String cleanedDescription = description
                 .replaceAll("[^\\p{L}\\p{N}\\s]", " ")
                 .replaceAll("\\s+", " ")
@@ -308,8 +307,8 @@ public class RpaSignDescParser {
                 .replaceAll("^\\s+ET\\s*$", "").trim();
 
         if (GlobalConfigs.LIST_OF_METADATA_TO_IGNORE.contains(cleanedDescription) || cleanedDescription.isEmpty())
-            additionalInfo = null;
+            return null;
         else
-            additionalInfo = cleanedDescription;
+            return cleanedDescription;
     }
 }

@@ -2,6 +2,7 @@
 
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jetbrains.annotations.NotNull;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
 import java.util.ArrayList;
@@ -23,11 +24,11 @@ public class RoadSignDescCleaner {
      * @param description The original description to be cleaned.
      * @return A cleaned version of the original description.
      */
-    public static String cleanDescription(String description) {
+    public static @NotNull String cleanDescription(@NotNull String description) {
         String cleanedDescription = description.toUpperCase().trim();
         cleanedDescription = removeUnnecessaryCharacters(cleanedDescription);
 
-        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
+//        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
         cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
         return cleanedDescription;
@@ -39,8 +40,10 @@ public class RoadSignDescCleaner {
      * @param description The original description to be cleaned.
      * @return A cleaned version of the original description.
      */
-    private static String removeUnnecessaryCharacters(String description) {
+    private static @NotNull String removeUnnecessaryCharacters(@NotNull String description) {
         return description
+                .replace("(NO PARKING)", "")
+                .replace("STAT. INT. (DE)?", "")
                 .replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
                 .replace("\\P", "")
                 .replace("/P", "")
@@ -48,6 +51,8 @@ public class RoadSignDescCleaner {
                 .replace(".", "")
                 .replace("É", "E")
                 .replace("È", "E")
+                .replace(",", "")
+                .replace("Ê", "E")
                 .replace("À", "A")
                 .replace("1ER", "1");
     }
@@ -127,14 +132,13 @@ public class RoadSignDescCleaner {
         return daysInRange;
     }
 
-
     /**
      * This method corrects misspelled names in the description.
      *
      * @param description The original description.
      * @return The description with corrected names.
      */
-    private static String correctSpelling(String description) {
+    private static @NotNull String correctSpelling(@NotNull String description) {
         return description.replace("AVIL", GlobalConfigs.APRIL)
                 .replace("AVRILS", GlobalConfigs.APRIL)
                 .replace("MRS", GlobalConfigs.MARCH)
@@ -148,7 +152,7 @@ public class RoadSignDescCleaner {
      * @param description The original description.
      * @return The description with spaces added where needed.
      */
-    private static String insertSpacesWhereNeeded(String description) {
+    private static @NotNull String insertSpacesWhereNeeded(@NotNull String description) {
         description = insertSpaceBetweenLetterAndNumber(description);
         description = insertSpaceBetweenDayAndMonth(description);
         return description;
@@ -160,7 +164,7 @@ public class RoadSignDescCleaner {
      * @param description The original description.
      * @return The description with spaces added between letters and numbers.
      */
-    private static String insertSpaceBetweenLetterAndNumber(String description) {
+    private static @NotNull String insertSpaceBetweenLetterAndNumber(@NotNull String description) {
         Pattern letterNumberPattern = Pattern.compile("(\\p{L})(\\d)");
         Matcher letterNumberMatcher = letterNumberPattern.matcher(description);
 
@@ -179,7 +183,7 @@ public class RoadSignDescCleaner {
      * @param description The original description.
      * @return The description with spaces added between day and month.
      */
-    private static String insertSpaceBetweenDayAndMonth(String description) {
+    private static @NotNull String insertSpaceBetweenDayAndMonth(@NotNull String description) {
         Pattern annualMonthRangePattern = Pattern.compile(
                 "\\b((" + GlobalConfigs.TWO_DIGIT + ")(" + GlobalConfigs.ANNUAL_MONTH_PATTERN + "))\\b",
                 Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);

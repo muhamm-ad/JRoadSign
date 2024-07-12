@@ -20,23 +20,23 @@ public class RpaSignDescRule {
     private static final LocalTime START_OF_DAY_HOUR = LocalTime.of(0, 0);
     private static final LocalTime END_OF_DAY_HOUR = LocalTime.of(23, 59);
 
-
-    private List<DurationMinutes> durationMinutesList;
-    private List<DailyTimeRange> dailyTimeRangeList;
+    private List<DurationMinutes> listDurationMinutes;
+    private List<DailyTimeRange> listDailyTimeRange;
     private WeeklyDays weeklyDays;
-    private List<AnnualMonthRange> annualMonthRangeList;
-    private String ruleAdditionalMetaData;
+    private List<AnnualMonthRange> listAnnualMonthRange;
+    private String additionalMetaData;
 
-    public RpaSignDescRule(List<DurationMinutes> durationMinutesList,
-                           List<DailyTimeRange> dailyTimeRangeList,
+    public RpaSignDescRule(boolean park,
+                           List<DurationMinutes> listDurationMinutes,
+                           List<DailyTimeRange> listDailyTimeRange,
                            WeeklyDays weeklyDays,
-                           List<AnnualMonthRange> annualMonthRangeList,
+                           List<AnnualMonthRange> listAnnualMonthRange,
                            String additionalMetaData) {
-        this.durationMinutesList = durationMinutesList;
-        this.dailyTimeRangeList = dailyTimeRangeList;
+        this.listDurationMinutes = listDurationMinutes;
+        this.listDailyTimeRange = listDailyTimeRange;
         this.weeklyDays = weeklyDays;
-        this.annualMonthRangeList = annualMonthRangeList;
-        this.ruleAdditionalMetaData = additionalMetaData;
+        this.listAnnualMonthRange = listAnnualMonthRange;
+        this.additionalMetaData = additionalMetaData;
     }
 
     public RpaSignDescRule(String sDescription) {
@@ -46,59 +46,44 @@ public class RpaSignDescRule {
         initWeeklyDays(rpaSignDescParser);
         initAnnualMonthRangeList(rpaSignDescParser);
         if (rpaSignDescParser.getAdditionalInfo() != null) {
-            ruleAdditionalMetaData = rpaSignDescParser.getAdditionalInfo();
+            additionalMetaData = rpaSignDescParser.getAdditionalInfo();
         }
     }
 
     private void initDurationMinutesList(@NotNull RpaSignDescParser rpaSignDescParser) {
         if (rpaSignDescParser.getDurationMinutes() != null) {
-            durationMinutesList = new ArrayList<>();
+            listDurationMinutes = new ArrayList<>();
             String[] tabDurationsMinutes = rpaSignDescParser.getDurationMinutes().split(";");
             for (String element : tabDurationsMinutes)
-                durationMinutesList.add(new DurationMinutes(element));
+                listDurationMinutes.add(new DurationMinutes(element));
         }
     }
 
     private void initDailyTimeRangeList(@NotNull RpaSignDescParser rpaSignDescParser) {
         if (rpaSignDescParser.getDailyTimeRange() != null) {
-            dailyTimeRangeList = new ArrayList<>();
-            processDailyTimeRangeList(
-                    rpaSignDescParser.getDailyTimeRange().split(";")
-            );
-        }
-    }
+            listDailyTimeRange = new ArrayList<>();
 
-    private void processDailyTimeRangeList(String @NotNull [] split) {
-        for (String element : split) {
-            try {
-                dailyTimeRangeList.add(new DailyTimeRange(element));
-            } catch (StartAfterEndException e1) {
-                processDailyTimeRangeListException(e1, element);
+            for (String s : rpaSignDescParser.getDailyTimeRange().split(";")) {
+                try {
+                    listDailyTimeRange.add(new DailyTimeRange(s));
+                } catch (StartAfterEndException e1) {
+                    if (hasRange(e1)) {
+                        try {
+                            Range<LocalTime> pastRange = (Range<LocalTime>) e1.getRange();
+                            Range<LocalTime> newRange1 = new Range<>(pastRange.getStart(), END_OF_DAY_HOUR);
+                            Range<LocalTime> newRange2 = new Range<>(START_OF_DAY_HOUR, pastRange.getEnd());
+                            listDailyTimeRange.add(new DailyTimeRange(newRange1));
+                            listDailyTimeRange.add(new DailyTimeRange(newRange2));
+                        } catch (StartAfterEndException e2) {
+                            throwInvalidFormatArg(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG, s);
+                        }
+                    } else {
+                        throwInvalidFormatArg(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG, s);
+                    }
+                }
             }
         }
     }
-
-    private void processDailyTimeRangeListException(@NotNull StartAfterEndException e1, String element) {
-        if (hasValidRange(e1)) {
-            try {
-                Range<LocalTime> pastRange = (Range<LocalTime>) e1.getRange();
-                addNewRangesToDailyTimeRangeList(pastRange);
-            } catch (StartAfterEndException e2) {
-                throwInvalidFormatArg(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG, element);
-            }
-        } else {
-            throwInvalidFormatArg(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG, element);
-        }
-    }
-
-    private void addNewRangesToDailyTimeRangeList(@NotNull Range<LocalTime> pastRange)
-            throws StartAfterEndException {
-        Range<LocalTime> newRange1 = new Range<>(pastRange.getStart(), END_OF_DAY_HOUR);
-        Range<LocalTime> newRange2 = new Range<>(START_OF_DAY_HOUR, pastRange.getEnd());
-        dailyTimeRangeList.add(new DailyTimeRange(newRange1));
-        dailyTimeRangeList.add(new DailyTimeRange(newRange2));
-    }
-
 
     private void initWeeklyDays(@NotNull RpaSignDescParser rpaSignDescParser) {
         try {
@@ -106,73 +91,54 @@ public class RpaSignDescRule {
                 weeklyDays = new WeeklyDays(rpaSignDescParser.getWeeklyDayRange());
             }
         } catch (WeeklyRangeExpException e1) {
-            processWeeklyDaysException(e1);
-        }
-    }
+            weeklyDays = e1.getWeeklyDays();
+            if (Objects.requireNonNull(e1.getExpression()) == WeekRangeExpression.ALL_TIMES_EXCEPT) {
+                List<DailyTimeRange> pastDailyTimeRangeList = new ArrayList<>(listDailyTimeRange);
+                listDailyTimeRange.clear();
 
-    private void processWeeklyDaysException(@NotNull WeeklyRangeExpException e1) {
-        weeklyDays = e1.getWeeklyDays();
-        if (Objects.requireNonNull(e1.getExpression()) == WeekRangeExpression.ALL_TIMES_EXCEPT) {
-            List<DailyTimeRange> pastDailyTimeRangeList = new ArrayList<>(dailyTimeRangeList);
-            dailyTimeRangeList.clear();
-
-            for (DailyTimeRange pastRange : pastDailyTimeRangeList) {
-                // REVIEW : check repetition
-                Range<LocalTime> newRange1 = new Range<>(LocalTime.of(0, 0), pastRange.getStart());
-                Range<LocalTime> newRange2 = new Range<>(pastRange.getEnd(), LocalTime.of(23, 59));
-                try {
-                    dailyTimeRangeList.add(new DailyTimeRange(newRange1));
-                    dailyTimeRangeList.add(new DailyTimeRange(newRange2));
-                } catch (StartAfterEndException e2) {
-                    throwInvalidFormatArg(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG,
-                            newRange1 + " and/or " + newRange2);
+                for (DailyTimeRange pastRange : pastDailyTimeRangeList) {
+                    // REVIEW : check repetition
+                    Range<LocalTime> newRange1 = new Range<>(LocalTime.of(0, 0), pastRange.getStart());
+                    Range<LocalTime> newRange2 = new Range<>(pastRange.getEnd(), LocalTime.of(23, 59));
+                    try {
+                        listDailyTimeRange.add(new DailyTimeRange(newRange1));
+                        listDailyTimeRange.add(new DailyTimeRange(newRange2));
+                    } catch (StartAfterEndException e2) {
+                        throwInvalidFormatArg(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG,
+                                newRange1 + " and/or " + newRange2);
+                    }
                 }
             }
         }
     }
 
-
     private void initAnnualMonthRangeList(@NotNull RpaSignDescParser rpaSignDescParser) {
         if (rpaSignDescParser.getAnnualMonthRange() != null) {
-            annualMonthRangeList = new ArrayList<>();
-            processAnnualMonthRangeList(
-                    rpaSignDescParser.getAnnualMonthRange().split(";")
-            );
-        }
-    }
+            listAnnualMonthRange = new ArrayList<>();
 
-    private void processAnnualMonthRangeList(String @NotNull [] tabAnnualMonthRanges) {
-        for (String element : tabAnnualMonthRanges) {
-            try {
-                annualMonthRangeList.add(new AnnualMonthRange(element));
-            } catch (StartAfterEndException e1) {
-                processAnnualMonthRangeListException(e1, element);
+            for (String s : rpaSignDescParser.getAnnualMonthRange().split(";")) {
+                try {
+                    listAnnualMonthRange.add(new AnnualMonthRange(s));
+                } catch (StartAfterEndException e1) {
+                    if (hasRange(e1)) {
+                        try {
+                            Range<MonthDay> pastRange = (Range<MonthDay>) e1.getRange();
+                            Range<MonthDay> newRange1 = new Range<>(pastRange.getStart(), END_OF_MONTH_DAY);
+                            Range<MonthDay> newRange2 = new Range<>(START_OF_MONTH_DAY, pastRange.getEnd());
+                            listAnnualMonthRange.add(new AnnualMonthRange(newRange1));
+                            listAnnualMonthRange.add(new AnnualMonthRange(newRange2));
+                        } catch (StartAfterEndException e2) {
+                            throwInvalidFormatArg(AnnualMonthRange.MSG_ERR_INVALID_FORMAT_S_ARG, s);
+                        }
+                    } else {
+                        throwInvalidFormatArg(AnnualMonthRange.MSG_ERR_INVALID_FORMAT_S_ARG, s);
+                    }
+                }
             }
         }
     }
 
-    private void processAnnualMonthRangeListException(@NotNull StartAfterEndException e1, String element) {
-        if (hasValidRange(e1)) {
-            try {
-                Range<MonthDay> pastRange = (Range<MonthDay>) e1.getRange();
-                addNewRangesToAnnualMonthRangeList(pastRange);
-            } catch (StartAfterEndException e2) {
-                throwInvalidFormatArg(AnnualMonthRange.MSG_ERR_INVALID_FORMAT_S_ARG, element);
-            }
-        } else {
-            throwInvalidFormatArg(AnnualMonthRange.MSG_ERR_INVALID_FORMAT_S_ARG, element);
-        }
-    }
-
-    private void addNewRangesToAnnualMonthRangeList(@NotNull Range<MonthDay> pastRange)
-            throws StartAfterEndException {
-        Range<MonthDay> newRange1 = new Range<>(pastRange.getStart(), END_OF_MONTH_DAY);
-        Range<MonthDay> newRange2 = new Range<>(START_OF_MONTH_DAY, pastRange.getEnd());
-        annualMonthRangeList.add(new AnnualMonthRange(newRange1));
-        annualMonthRangeList.add(new AnnualMonthRange(newRange2));
-    }
-
-    private boolean hasValidRange(@NotNull StartAfterEndException exception) {
+    private boolean hasRange(@NotNull StartAfterEndException exception) {
         return exception.getRange() != null && exception.getRange() instanceof Range;
     }
 
@@ -181,34 +147,34 @@ public class RpaSignDescRule {
                 String.format(msgErrInvalidFormatSArg, element));
     }
 
-    public List<DurationMinutes> getDurationMinutesList() {
-        return durationMinutesList != null ? durationMinutesList : Collections.emptyList();
+    public List<DurationMinutes> getListDurationMinutes() {
+        return listDurationMinutes != null ? listDurationMinutes : Collections.emptyList();
     }
 
-    public List<DailyTimeRange> getDailyTimeRangeList() {
-        return dailyTimeRangeList != null ? dailyTimeRangeList : Collections.emptyList();
+    public List<DailyTimeRange> getListDailyTimeRange() {
+        return listDailyTimeRange != null ? listDailyTimeRange : Collections.emptyList();
     }
 
     public WeeklyDays getWeeklyDays() {
         return weeklyDays;
     }
 
-    public String getRuleAdditionalMetaData() {
-        return ruleAdditionalMetaData;
+    public List<AnnualMonthRange> getListAnnualMonthRange() {
+        return listAnnualMonthRange != null ? listAnnualMonthRange : Collections.emptyList();
     }
 
-    public List<AnnualMonthRange> getAnnualMonthRangeList() {
-        return annualMonthRangeList != null ? annualMonthRangeList : Collections.emptyList();
+    public String getAdditionalMetaData() {
+        return additionalMetaData;
     }
 
     @Override
     public String toString() {
         return "RpaSignDescRule{" +
-                "durationMinutesList=" + durationMinutesList +
-                ", dailyTimeRangeList=" + dailyTimeRangeList +
+                ", listDurationMinutes=" + listDurationMinutes +
+                ", listDailyTimeRange=" + listDailyTimeRange +
                 ", weeklyDays=" + weeklyDays +
-                ", annualMonthRangeList=" + annualMonthRangeList +
-                ", ruleAdditionalMetaData='" + ruleAdditionalMetaData + '\'' +
+                ", listAnnualMonthRange=" + listAnnualMonthRange +
+                ", additionalMetaData='" + additionalMetaData + '\'' +
                 '}';
     }
 }

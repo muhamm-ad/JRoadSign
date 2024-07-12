@@ -181,6 +181,6 @@ public class GlobalConfigs {
 
     /******************************************* Other variables *******************************************/
     public static final List<String> LIST_OF_METADATA_TO_IGNORE =
-            new ArrayList<>(Arrays.asList("STAT INT", "STAT INT DE", "TEMPS", "NO PARKING", "NON CONFORME"));
+            new ArrayList<>(Arrays.asList("TEMPS", "NON CONFORME"));
 
 }

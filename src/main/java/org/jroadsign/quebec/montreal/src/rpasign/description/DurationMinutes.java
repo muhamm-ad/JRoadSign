@@ -46,6 +46,6 @@ public class DurationMinutes {
 
     @Override
     public String toString() {
-        return "DurationMinutes{" + duration + '}';
+        return "DurationMinutes = " + duration;
     }
 }

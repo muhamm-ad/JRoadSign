@@ -13,13 +13,15 @@ import java.util.regex.Pattern;
 
 public class DailyTimeRange {
 
+    public static final String FORMATED_DAY_TIME_RANGE_PATTERN =
+            String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "", "-");
+
     public static final String MSG_ERR_INVALID_FORMAT_S_ARG =
-            "Invalid DailyTimeRange format: %s. Expected format: "
-                    + String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "", "-");
+            "Invalid DailyTimeRange format: %s. Expected format: " + FORMATED_DAY_TIME_RANGE_PATTERN;
     public static final String MSG_ERR_START_AFTER_END =
             "Start time `%s` is after end time `%s`. DailyTimeRange should be within the same day.";
     private static final Pattern COMPILED_DAY_TIME_RANGE_PATTERN = Pattern.compile(
-            "^" + String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "", "-") + "$");
+            "^" + FORMATED_DAY_TIME_RANGE_PATTERN + "$");
 
     private Range<LocalTime> range;
 

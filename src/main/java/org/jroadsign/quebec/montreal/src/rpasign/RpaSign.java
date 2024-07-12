@@ -3,6 +3,7 @@
 package org.jroadsign.quebec.montreal.src.rpasign;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
+import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescStrRule;
 
 import java.util.List;
 
@@ -21,23 +22,11 @@ public class RpaSign {
         this.code = code;
     }
 
-    public RpaSign(long id, String description, String code) {
+    public RpaSign(long id, String sDescription, String sCode) {
         this.id = id;
-        this.code = RpaSignCode.fromString(code);
-        initDescription(description);
-    }
-
-    private void initDescription(String description) {
-        switch (code) {
-            case SLR_ST_75:
-                this.description = new RpaSignDesc(List.of(description.split(",")), description);
-                break;
-            case SLR_ST_111:
-                this.description = new RpaSignDesc(List.of(description.split(" - ")), description);
-                break;
-            default:
-                this.description = new RpaSignDesc(description);
-        }
+        this.code = RpaSignCode.fromString(sCode);
+        List<String> sRules = RpaSignDescStrRule.divider(this.code, sDescription);
+        this.description = new RpaSignDesc(sRules, sDescription);
     }
 
     public long getId() {
@@ -49,7 +38,7 @@ public class RpaSign {
     }
 
     public String getStringDescription() {
-        return description.getStringDescription();
+        return description.getStrDescription();
     }
 
     public RpaSignCode getCode() {
