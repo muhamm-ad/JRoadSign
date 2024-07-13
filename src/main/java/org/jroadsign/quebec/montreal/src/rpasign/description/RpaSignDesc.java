@@ -18,7 +18,7 @@ public class RpaSignDesc {
         this.strDescription = strDescription;
         rpaSignDescRules = new ArrayList<>();
 
-        String cleanedStrDescription = RoadSignDescCleaner.cleanDescription(strDescription);
+        String cleanedStrDescription = RoadSignDescCleaner.cleanDescription(strDescription, code);
         List<String> rpaSignDescStrRules = RpaSignDescStrRule.divider(cleanedStrDescription, code);
 
         for (String strRule : rpaSignDescStrRules) {

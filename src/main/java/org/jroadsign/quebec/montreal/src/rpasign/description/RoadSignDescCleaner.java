@@ -1,6 +1,7 @@
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jetbrains.annotations.NotNull;
+import org.jroadsign.quebec.montreal.src.rpasign.RpaSignCode;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
 import java.util.ArrayList;
@@ -12,6 +13,14 @@ import java.util.regex.Pattern;
 public class RoadSignDescCleaner {
 
     private RoadSignDescCleaner() {
+    }
+
+    public static @NotNull String cleanDescription(@NotNull String strDescription, RpaSignCode code) {
+        if (code.getCode().startsWith("S") && !strDescription.startsWith("\\P")) {
+            strDescription = "\\P " + strDescription;
+        }
+
+        return cleanDescription(strDescription);
     }
 
     /**
@@ -56,7 +65,6 @@ public class RoadSignDescCleaner {
                 .replace("/P", "\\P")
                 .replace("\\P EXCEPTE", "\\P EN TOUT TEMPS EXCEPTE");
     }
-
 
     /**
      * This method reformats the time range string in the description.
