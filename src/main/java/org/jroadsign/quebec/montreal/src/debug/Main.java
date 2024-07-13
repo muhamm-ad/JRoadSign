@@ -5,11 +5,14 @@ import org.jroadsign.quebec.montreal.src.RoadSign;
 import org.jroadsign.quebec.montreal.src.rpasign.RpaSign;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RoadSignDescCleaner;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescParser;
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
 import java.io.*;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -54,7 +57,7 @@ public class Main {
                 BufferedWriter writer_cleanedDescription =
                         new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "cleanedDescription.txt")));
 
-                BufferedWriter writer =
+                /*BufferedWriter writer =
                         new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc.txt")));
                 BufferedWriter writer_durationInMinutes =
                         new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_durationMinutes.txt")));
@@ -65,7 +68,7 @@ public class Main {
                 BufferedWriter writer_months =
                         new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_annualMonthRange.txt")));
                 BufferedWriter writer_additionalMetaData =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo.txt")));
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo.txt")));*/
         ) {
             for (RoadSign s : roadSigns.values()) {
                 RpaSign rpaSign = s.getRpaSign();
@@ -76,13 +79,10 @@ public class Main {
                 String cleanedDescription = RoadSignDescCleaner.cleanDescription(sDescription);
                 writer_cleanedDescription.write(cleanedDescription + "\n");
 
-                RpaSignDescParser rpaSignDes = new RpaSignDescParser(cleanedDescription);
+                /*RpaSignDescParser rpaSignDes = new RpaSignDescParser(cleanedDescription);
 
-                //if (rpaSignDes.getAdditionalInfo() != null
-                // && !rpaSignDes.getAdditionalInfo().isEmpty()) {// DEBUG: filter
                 writer.write(sDescription + "\n\t==> ");
                 writer.write(rpaSignDes + "\n");
-                //}
 
                 if (rpaSignDes.getDurationMinutes() != null && !rpaSignDes.getDurationMinutes().isEmpty()) {
                     writer_durationInMinutes.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
@@ -106,17 +106,17 @@ public class Main {
                 if (rpaSignDes.getAdditionalInfo() != null && !rpaSignDes.getAdditionalInfo().isEmpty()) {
                     writer_additionalMetaData.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
                     writer_additionalMetaData.write(rpaSignDes.getAdditionalInfo() + "\n");
-                }
+                }*/
             }
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }
-        // Define script path and arguments
+        /*// Define script path and arguments
         String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
         String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc_*.txt";
 
         // Execute the script with arguments
-        executeScript(scriptPath, targetFiles);
+        executeScript(scriptPath, targetFiles);*/
     }
 
     private static String formatLineRpaSign(String lineOfRpaSign) {
@@ -130,6 +130,7 @@ public class Main {
                 .replace("}, RpaSignDescRule", "\n\t\t\t},\n\t\t\tRpaSignDescRule")
 
                 .replace("listDurationMinutes", "\n\t\t\t\tlistDurationMinutes")
+                .replace("parkingAuthorized", "\n\t\t\t\tparkingAuthorized")
                 .replaceAll("(?<!list)DurationMinutes", "\n\t\t\t\t\t\tDurationMinutes")
                 .replace("listDailyTimeRange", "\n\t\t\t\tlistDailyTimeRange")
                 .replaceAll("(?<!list)DailyTimeRange", "\n\t\t\t\t\t\tDailyTimeRange")
@@ -191,17 +192,47 @@ public class Main {
         }
     }
 
+    public static void checkPattern() {
+        final String WEEKLY_DAYS_EXPRESSION_PATTERN =
+                GlobalConfigs.ALL_TIME_EXCEPT_PATTERN + "\\s+" +
+                        String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\s*", "\\s*(AU?|-)\\s*") + "\\s+" +
+                        GlobalConfigs.WEEKLY_DAYS_RANGE_PATTERN;
+        System.out.println("Pattern : \"" + WEEKLY_DAYS_EXPRESSION_PATTERN + "\"");
+
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print("Enter a string to compare to the pattern (or type 'exit' to quit): ");
+            String input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("exit")) {
+                break;
+            }
+
+            Pattern pattern = Pattern.compile("\\b(" + WEEKLY_DAYS_EXPRESSION_PATTERN + ")\\b",
+                    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+            Matcher matcher = pattern.matcher(input);
+
+            if (matcher.matches()) {
+                System.out.println("Yes, matched");
+            } else {
+                System.out.println("Not matched");
+            }
+        }
+        scanner.close();
+    }
+
     public static void main(String[] args) {
         // This main method is for debugging purposes.
-//        if (!OUTPUT_DIR.exists()) {
-//            OUTPUT_DIR.mkdir();
-//        }
+        /*if (!OUTPUT_DIR.exists()) {
+            OUTPUT_DIR.mkdir();
+        }*/
 
         SortedMap<Long, RoadSign> roadSigns = prepareRoadSignData();
 
-        // debugRpaSignDescription(roadSigns);
-        // debugRoadSign_to_file(roadSigns);
+        debugRpaSignDescription(roadSigns);
+        //debugRoadSign_to_file(roadSigns);
         debugRoadSign_to_stdout(roadSigns);
+        //checkPattern();
     }
 
 }

@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
  */
 public class RpaSignDescParser {
 
+    private final boolean parkingAuthorized;
     private String durationMinutes;
     private String dailyTimeRange;
     private String weeklyDayRange;
@@ -28,6 +29,9 @@ public class RpaSignDescParser {
      * @param description The description to be parsed
      */
     public RpaSignDescParser(String description) {
+        parkingAuthorized = !description.startsWith("\\P");
+        description = description.replace("\\P", "").trim();
+
         additionalInfo = cleanAdditionalInfo(extractInformations(description));
     }
 
@@ -80,7 +84,6 @@ public class RpaSignDescParser {
         return description;
     }
 
-
     /**
      * Function to extract matches from a description using a given matcher
      * It uses the provided action to handle each match found
@@ -112,6 +115,10 @@ public class RpaSignDescParser {
     }
 
     // Getters for each property
+    public boolean isParkingAuthorized() {
+        return parkingAuthorized;
+    }
+
     public String getDurationMinutes() {
         return durationMinutes;
     }
@@ -135,7 +142,8 @@ public class RpaSignDescParser {
     @Override
     public String toString() {
         return "RpaSignDescParser{" +
-                "durationMinutes='" + durationMinutes + '\'' +
+                "parkingAuthorized=" + parkingAuthorized +
+                ", durationMinutes='" + durationMinutes + '\'' +
                 ", dailyTimeRange='" + dailyTimeRange + '\'' +
                 ", weeklyDayRange='" + weeklyDayRange + '\'' +
                 ", annualMonthRange='" + annualMonthRange + '\'' +

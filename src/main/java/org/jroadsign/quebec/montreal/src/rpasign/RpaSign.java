@@ -1,11 +1,6 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
-import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescStrRule;
-
-import java.util.List;
 
 /**
  * Represents an RPA (Regulation Par Arrondissement) of Sign with ID, description, and code.
@@ -25,8 +20,7 @@ public class RpaSign {
     public RpaSign(long id, String sDescription, String sCode) {
         this.id = id;
         this.code = RpaSignCode.fromString(sCode);
-        List<String> sRules = RpaSignDescStrRule.divider(this.code, sDescription);
-        this.description = new RpaSignDesc(sRules, sDescription);
+        this.description = new RpaSignDesc(sDescription, this.code);
     }
 
     public long getId() {

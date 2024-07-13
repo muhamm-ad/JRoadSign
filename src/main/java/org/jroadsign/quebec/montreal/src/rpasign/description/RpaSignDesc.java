@@ -1,6 +1,6 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
+
+import org.jroadsign.quebec.montreal.src.rpasign.RpaSignCode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,14 +14,15 @@ public class RpaSignDesc {
         this.rpaSignDescRules = rpaSignDescRules;
     }
 
-    public RpaSignDesc(List<String> rpaSignDescStrRules, String strDescription) {
-        if (rpaSignDescStrRules == null) throw new IllegalArgumentException("sDescriptions cannot be null");
+    public RpaSignDesc(String strDescription, RpaSignCode code) { // FIXME : remove `code`
         this.strDescription = strDescription;
         rpaSignDescRules = new ArrayList<>();
 
+        String cleanedStrDescription = RoadSignDescCleaner.cleanDescription(strDescription);
+        List<String> rpaSignDescStrRules = RpaSignDescStrRule.divider(cleanedStrDescription, code);
+
         for (String strRule : rpaSignDescStrRules) {
-            String cleanedStrRule = RoadSignDescCleaner.cleanDescription(strRule.trim());
-            rpaSignDescRules.add(new RpaSignDescRule(cleanedStrRule));
+            rpaSignDescRules.add(new RpaSignDescRule(strRule));
         }
     }
 

@@ -1,5 +1,3 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,18 +18,20 @@ public class RpaSignDescRule {
     private static final LocalTime START_OF_DAY_HOUR = LocalTime.of(0, 0);
     private static final LocalTime END_OF_DAY_HOUR = LocalTime.of(23, 59);
 
+    private boolean parkingAuthorized;
     private List<DurationMinutes> listDurationMinutes;
     private List<DailyTimeRange> listDailyTimeRange;
     private WeeklyDays weeklyDays;
     private List<AnnualMonthRange> listAnnualMonthRange;
     private String additionalMetaData;
 
-    public RpaSignDescRule(boolean park,
+    public RpaSignDescRule(boolean parkingAuthorized,
                            List<DurationMinutes> listDurationMinutes,
                            List<DailyTimeRange> listDailyTimeRange,
                            WeeklyDays weeklyDays,
                            List<AnnualMonthRange> listAnnualMonthRange,
                            String additionalMetaData) {
+        this.parkingAuthorized = parkingAuthorized;
         this.listDurationMinutes = listDurationMinutes;
         this.listDailyTimeRange = listDailyTimeRange;
         this.weeklyDays = weeklyDays;
@@ -39,15 +39,16 @@ public class RpaSignDescRule {
         this.additionalMetaData = additionalMetaData;
     }
 
-    public RpaSignDescRule(String sDescription) {
-        RpaSignDescParser rpaSignDescParser = new RpaSignDescParser(sDescription);
+    public RpaSignDescRule(String strRuleDesc) {
+        // String cleanedStrRuleDesc = RoadSignDescCleaner.cleanDescription(strRuleDesc);
+        RpaSignDescParser rpaSignDescParser = new RpaSignDescParser(strRuleDesc);
+
+        this.parkingAuthorized = rpaSignDescParser.isParkingAuthorized();
         initDurationMinutesList(rpaSignDescParser);
         initDailyTimeRangeList(rpaSignDescParser);
         initWeeklyDays(rpaSignDescParser);
         initAnnualMonthRangeList(rpaSignDescParser);
-        if (rpaSignDescParser.getAdditionalInfo() != null) {
-            additionalMetaData = rpaSignDescParser.getAdditionalInfo();
-        }
+        initAdditionnalInfo(rpaSignDescParser);
     }
 
     private void initDurationMinutesList(@NotNull RpaSignDescParser rpaSignDescParser) {
@@ -93,21 +94,7 @@ public class RpaSignDescRule {
         } catch (WeeklyRangeExpException e1) {
             weeklyDays = e1.getWeeklyDays();
             if (Objects.requireNonNull(e1.getExpression()) == WeekRangeExpression.ALL_TIMES_EXCEPT) {
-                List<DailyTimeRange> pastDailyTimeRangeList = new ArrayList<>(listDailyTimeRange);
-                listDailyTimeRange.clear();
-
-                for (DailyTimeRange pastRange : pastDailyTimeRangeList) {
-                    // REVIEW : check repetition
-                    Range<LocalTime> newRange1 = new Range<>(LocalTime.of(0, 0), pastRange.getStart());
-                    Range<LocalTime> newRange2 = new Range<>(pastRange.getEnd(), LocalTime.of(23, 59));
-                    try {
-                        listDailyTimeRange.add(new DailyTimeRange(newRange1));
-                        listDailyTimeRange.add(new DailyTimeRange(newRange2));
-                    } catch (StartAfterEndException e2) {
-                        throwInvalidFormatArg(DailyTimeRange.MSG_ERR_INVALID_FORMAT_S_ARG,
-                                newRange1 + " and/or " + newRange2);
-                    }
-                }
+                this.parkingAuthorized = true;
             }
         }
     }
@@ -138,13 +125,22 @@ public class RpaSignDescRule {
         }
     }
 
+    private void initAdditionnalInfo(RpaSignDescParser rpaSignDescParser) {
+        if (rpaSignDescParser.getAdditionalInfo() != null) {
+            additionalMetaData = rpaSignDescParser.getAdditionalInfo();
+        }
+    }
+
     private boolean hasRange(@NotNull StartAfterEndException exception) {
         return exception.getRange() != null && exception.getRange() instanceof Range;
     }
 
     private static void throwInvalidFormatArg(String msgErrInvalidFormatSArg, String element) {
-        throw new IllegalArgumentException(
-                String.format(msgErrInvalidFormatSArg, element));
+        throw new IllegalArgumentException(String.format(msgErrInvalidFormatSArg, element));
+    }
+
+    public boolean isParkingAuthorized() {
+        return parkingAuthorized;
     }
 
     public List<DurationMinutes> getListDurationMinutes() {
@@ -170,6 +166,7 @@ public class RpaSignDescRule {
     @Override
     public String toString() {
         return "RpaSignDescRule{" +
+                "parkingAuthorized=" + parkingAuthorized +
                 ", listDurationMinutes=" + listDurationMinutes +
                 ", listDailyTimeRange=" + listDailyTimeRange +
                 ", weeklyDays=" + weeklyDays +

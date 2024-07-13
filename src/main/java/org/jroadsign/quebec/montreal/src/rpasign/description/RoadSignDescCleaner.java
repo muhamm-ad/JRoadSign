@@ -24,9 +24,9 @@ public class RoadSignDescCleaner {
      */
     public static @NotNull String cleanDescription(@NotNull String strDescription) {
         String cleanedDescription = strDescription.toUpperCase().trim();
-        cleanedDescription = removeUnnecessaryCharacters(cleanedDescription);
+        cleanedDescription = handleNoParking(removeUnnecessaryCharacters(cleanedDescription)).trim();
 
-//        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
+        // cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
         cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
         return cleanedDescription.trim();
@@ -40,19 +40,23 @@ public class RoadSignDescCleaner {
      */
     private static @NotNull String removeUnnecessaryCharacters(@NotNull String description) {
         return description
-                .replace("(NO PARKING)", "")
-                .replaceAll("STAT. INT. (DE)?", "")
-                .replace("/P", "")
                 .replaceAll("\\s+", " ")
                 .replace(".", "")
                 .replace("É", "E")
                 .replace("È", "E")
                 .replace("Ê", "E")
                 .replace("À", "A")
-                .replace("1ER", "1")
-                .replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
-                .replace("\\P", "");
+                .replace("1ER", "1");
     }
+
+    private static @NotNull String handleNoParking(@NotNull String description) {
+        return description
+                .replace("(NO PARKING)", "\\P")
+                .replaceAll("STAT. INT. (DE)?", "\\P")
+                .replace("/P", "\\P")
+                .replace("\\P EXCEPTE", "\\P EN TOUT TEMPS EXCEPTE");
+    }
+
 
     /**
      * This method reformats the time range string in the description.
