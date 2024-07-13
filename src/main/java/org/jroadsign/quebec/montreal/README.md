@@ -39,7 +39,3 @@ for the Montreal submodule.
 ## Module Maintainers
 
 - [muhamm-ad](https://github.com/muhamm-ad) - Module Lead and Primary Contributor.
-
-## License
-
-This module is part of the JRoadSign project, which is licensed under the [GPL-3.0](../../../../../../../docs/LICENSE).

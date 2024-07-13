@@ -50,7 +50,3 @@ Contributions to JRoadSign are highly appreciated. You can contribute in various
 ## Authors
 
 - [muhamm-ad](https://github.com/muhamm-ad) - Project Founder and Main Contributor.
-
-## License
-
-This project is licensed under the [GPL-3.0](docs/LICENSE) - see the file for details.

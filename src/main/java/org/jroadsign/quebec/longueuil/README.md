@@ -46,7 +46,3 @@ for the Longueuil submodule.
 ## Module Maintainers
 
 [//]: # (- [muhamm-ad]&#40;https://github.com/muhamm-ad&#41; - Module Lead and Primary Contributor.)
-
-## License
-
-This module is part of the JRoadSign project, which is licensed under the [GPL-3.0](../../../../../../../docs/LICENSE).
