@@ -1,5 +1,3 @@
-// License: GPL. For details, see Readme.txt file.
-
 package org.jroadsign.common;
 
 import java.awt.geom.Point2D;

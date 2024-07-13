@@ -1,5 +1,3 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jetbrains.annotations.NotNull;
@@ -217,7 +215,6 @@ public class RpaSignDescParser {
         }
 
         // Normalize spacing and handle special cases like ranges and combinations
-        weeklyDayRange = standardizeWeeklyDayRangePattern(weeklyDayRange);
         weeklyDayRange = standardizeWeeklyDayRangePattern(weeklyDayRange)
                 .replaceAll("\\sAU\\s", "-")
                 .replaceAll("\\sA\\s", "-")

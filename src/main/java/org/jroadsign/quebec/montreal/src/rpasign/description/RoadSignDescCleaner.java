@@ -1,5 +1,3 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,17 +19,17 @@ public class RoadSignDescCleaner {
      * It normalizes the string to upper case, removes possible prefixes, extra spaces, unwanted characters,
      * misspellings, and adds spaces where needed.
      *
-     * @param description The original description to be cleaned.
+     * @param strDescription The original description to be cleaned.
      * @return A cleaned version of the original description.
      */
-    public static @NotNull String cleanDescription(@NotNull String description) {
-        String cleanedDescription = description.toUpperCase().trim();
+    public static @NotNull String cleanDescription(@NotNull String strDescription) {
+        String cleanedDescription = strDescription.toUpperCase().trim();
         cleanedDescription = removeUnnecessaryCharacters(cleanedDescription);
 
 //        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
         cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
-        return cleanedDescription;
+        return cleanedDescription.trim();
     }
 
     /**
@@ -43,18 +41,17 @@ public class RoadSignDescCleaner {
     private static @NotNull String removeUnnecessaryCharacters(@NotNull String description) {
         return description
                 .replace("(NO PARKING)", "")
-                .replace("STAT. INT. (DE)?", "")
-                .replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
-                .replace("\\P", "")
+                .replaceAll("STAT. INT. (DE)?", "")
                 .replace("/P", "")
                 .replaceAll("\\s+", " ")
                 .replace(".", "")
                 .replace("É", "E")
                 .replace("È", "E")
-                .replace(",", "")
                 .replace("Ê", "E")
                 .replace("À", "A")
-                .replace("1ER", "1");
+                .replace("1ER", "1")
+                .replace("\\P EXCEPTE", "EN TOUT TEMPS EXCEPTE")
+                .replace("\\P", "");
     }
 
     /**

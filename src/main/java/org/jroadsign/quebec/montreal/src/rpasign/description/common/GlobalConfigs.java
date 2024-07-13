@@ -1,5 +1,3 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description.common;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.AnnualMonthRange;
@@ -39,7 +37,8 @@ public class GlobalConfigs {
      /**************************************************************************************************/
     public static final String ALL_TIME_PATTERN = "EN\\s+TOUT\\s+TEMPS";
     public static final String ALL_TIMES = "EN_TOUT_TEMPS";
-    public static final String ALL_TIME_EXCEPT_PATTERN = ALL_TIME_PATTERN + "\\s+EXCEPTE";
+    public static final String EXCEPT_PATTERN = "\\s+EXCEPTE";
+    public static final String ALL_TIME_EXCEPT_PATTERN = ALL_TIME_PATTERN + EXCEPT_PATTERN;
     public static final String ALL_TIMES_EXCEPT = "EN_TOUT_TEMPS_EXCEPTE";
     public static final String SCHOOL_DAYS_PATTERN = "JOURS\\s+D'ECOLES?";
     public static final String SCHOOL_DAYS = "JOURS_D_ECOLES";
