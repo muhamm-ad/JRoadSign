@@ -1,5 +1,3 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.rpasign.description;
 
 import junit.framework.TestCase;
@@ -8,6 +6,8 @@ import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfig
 import org.junit.Test;
 
 import java.util.Arrays;
+
+import static org.junit.Assert.assertThrows;
 
 public class WeekRangeExpressionTest extends TestCase {
 
@@ -26,7 +26,7 @@ public class WeekRangeExpressionTest extends TestCase {
         assertNull(WeekRangeExpression.fromString("INVALID STRING"));
         assertNull(WeekRangeExpression.fromString(""));
         assertNull(WeekRangeExpression.fromString(" "));
-        assertNull(WeekRangeExpression.fromString(null));
+        assertThrows(IllegalArgumentException.class, () -> WeekRangeExpression.fromString(null));
     }
 
     @Test

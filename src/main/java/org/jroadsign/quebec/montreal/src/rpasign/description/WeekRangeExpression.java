@@ -1,7 +1,6 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jetbrains.annotations.NotNull;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
 public enum WeekRangeExpression {
@@ -16,7 +15,7 @@ public enum WeekRangeExpression {
         this.descriptions = descriptions;
     }
 
-    public static WeekRangeExpression fromString(String text) {
+    public static WeekRangeExpression fromString(@NotNull String text) {
         for (WeekRangeExpression expression : WeekRangeExpression.values()) {
             for (String description : expression.descriptions) {
                 if (description.equalsIgnoreCase(text)) {

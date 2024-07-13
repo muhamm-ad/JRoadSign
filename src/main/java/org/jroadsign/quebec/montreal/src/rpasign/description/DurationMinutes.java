@@ -1,7 +1,6 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jetbrains.annotations.NotNull;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 
 import java.util.regex.Matcher;
@@ -16,7 +15,7 @@ public class DurationMinutes {
 
     private int duration;
 
-    public DurationMinutes(String sDurationMinutes) {
+    public DurationMinutes(@NotNull String sDurationMinutes) {
         Matcher matcher = COMPILED_DURATION_PATTERN.matcher(sDurationMinutes);
         if (!matcher.find()) {
             throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sDurationMinutes));

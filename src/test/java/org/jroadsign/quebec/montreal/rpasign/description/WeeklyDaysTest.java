@@ -1,5 +1,3 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.rpasign.description;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.WeekRangeExpression;
@@ -131,35 +129,23 @@ public class WeeklyDaysTest {
 
     @Test
     public void testAllTimesExpression() {
-        try {
-            WeeklyDays allTimes = new WeeklyDays(WeekRangeExpression.ALL_TIMES);
-            EnumSet<DayOfWeek> expected = EnumSet.allOf(DayOfWeek.class);
-            assertEquals(expected, allTimes.getDays());
-        } catch (WeeklyRangeExpException e) {
-            fail("WeeklyRangeExpException was thrown: " + e.getMessage());
-        }
+        WeeklyDays allTimes = new WeeklyDays(WeekRangeExpression.ALL_TIMES);
+        EnumSet<DayOfWeek> expected = EnumSet.allOf(DayOfWeek.class);
+        assertEquals(expected, allTimes.getDays());
     }
 
     @Test
     public void testSchoolDaysExpression() {
-        try {
-            WeeklyDays schoolDays = new WeeklyDays(WeekRangeExpression.SCHOOL_DAYS);
-            EnumSet<DayOfWeek> expected = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.FRIDAY);
-            assertEquals(expected, schoolDays.getDays());
-        } catch (WeeklyRangeExpException e) {
-            fail("WeeklyRangeExpException was thrown: " + e.getMessage());
-        }
+        WeeklyDays schoolDays = new WeeklyDays(WeekRangeExpression.SCHOOL_DAYS);
+        EnumSet<DayOfWeek> expected = EnumSet.range(DayOfWeek.MONDAY, DayOfWeek.FRIDAY);
+        assertEquals(expected, schoolDays.getDays());
     }
 
     @Test
     public void testWeekEndExpression() {
-        try {
-            WeeklyDays weekEnd = new WeeklyDays(WeekRangeExpression.WEEK_END);
-            EnumSet<DayOfWeek> expected = EnumSet.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
-            assertEquals(expected, weekEnd.getDays());
-        } catch (WeeklyRangeExpException e) {
-            fail("WeeklyRangeExpException was thrown: " + e.getMessage());
-        }
+        WeeklyDays weekEnd = new WeeklyDays(WeekRangeExpression.WEEK_END);
+        EnumSet<DayOfWeek> expected = EnumSet.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
+        assertEquals(expected, weekEnd.getDays());
     }
 
     @Test
@@ -304,20 +290,16 @@ public class WeeklyDaysTest {
 
     @Test
     public void testAllTimesExceptExpression() {
-        try {
-            new WeeklyDays(WeekRangeExpression.ALL_TIMES_EXCEPT);
-        } catch (WeeklyRangeExpException e1) {
-            assertEquals(EnumSet.allOf(DayOfWeek.class), e1.getWeeklyDays().getDays());
-        }
+        assertThrows(IllegalStateException.class, () -> new WeeklyDays(WeekRangeExpression.ALL_TIMES_EXCEPT));
 
         assertAllTimesExceptExpression(GlobalConfigs.ALL_TIMES_EXCEPT + ";LUN;VEN",
-                EnumSet.complementOf(EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY)));
+                EnumSet.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY));
 
         assertAllTimesExceptExpression("SAM;MAR;" + GlobalConfigs.ALL_TIMES_EXCEPT + ";VEN",
-                EnumSet.complementOf(EnumSet.of(DayOfWeek.SATURDAY, DayOfWeek.TUESDAY, DayOfWeek.FRIDAY)));
+                EnumSet.of(DayOfWeek.SATURDAY, DayOfWeek.TUESDAY, DayOfWeek.FRIDAY));
 
         assertAllTimesExceptExpression("MER;JEU;VEN;" + GlobalConfigs.ALL_TIMES_EXCEPT,
-                EnumSet.complementOf(EnumSet.of(DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY)));
+                EnumSet.of(DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY));
     }
 
     private void assertAllTimesExceptExpression(String input, EnumSet<DayOfWeek> expected) {

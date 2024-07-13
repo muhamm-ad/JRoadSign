@@ -1,7 +1,6 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jetbrains.annotations.NotNull;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
 
@@ -25,7 +24,7 @@ public class DailyTimeRange {
 
     private Range<LocalTime> range;
 
-    public DailyTimeRange(String sDailyTimeRange) throws StartAfterEndException {
+    public DailyTimeRange(@NotNull String sDailyTimeRange) throws StartAfterEndException {
         Matcher matcher = COMPILED_DAY_TIME_RANGE_PATTERN.matcher(sDailyTimeRange);
         if (!matcher.find())
             throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sDailyTimeRange));

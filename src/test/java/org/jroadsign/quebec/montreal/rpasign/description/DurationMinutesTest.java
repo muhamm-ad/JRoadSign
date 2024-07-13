@@ -1,5 +1,3 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.rpasign.description;
 
 import org.jroadsign.quebec.montreal.src.rpasign.description.DurationMinutes;

@@ -1,7 +1,6 @@
-// License: GPL-3.0. For details, see README.md file.
-
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jetbrains.annotations.NotNull;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalFunctions;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
@@ -24,7 +23,7 @@ public class AnnualMonthRange {
 
     private Range<MonthDay> range;
 
-    public AnnualMonthRange(String sAnnualMonthRange) throws StartAfterEndException {
+    public AnnualMonthRange(@NotNull String sAnnualMonthRange) throws StartAfterEndException {
         Matcher matcher = COMPILED_ANNUAL_MONTH_RANGE_PATTERN.matcher(sAnnualMonthRange);
         if (!matcher.find())
             throw new IllegalArgumentException(String.format(MSG_ERR_INVALID_FORMAT_S_ARG, sAnnualMonthRange));
