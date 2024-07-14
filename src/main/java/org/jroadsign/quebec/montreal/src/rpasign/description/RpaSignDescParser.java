@@ -29,7 +29,7 @@ public class RpaSignDescParser {
      * @param description The description to be parsed
      */
     public RpaSignDescParser(String description) {
-        parkingAuthorized = !description.startsWith("\\P");
+        parkingAuthorized = !description.trim().startsWith("\\P");
         description = description.replace("\\P", "").trim();
 
         additionalInfo = cleanAdditionalInfo(extractInformations(description));
@@ -216,7 +216,7 @@ public class RpaSignDescParser {
             String abbreviation = entry.getValue().trim();
             // Replace full day names with abbreviations
             weeklyDayRange = weeklyDayRange
-                    .replaceAll(entry.getKey(), " " + abbreviation + " ")
+                    //.replaceAll(entry.getKey(), " " + abbreviation + " ") // already done in cleaning
                     .replaceAll("(\\b" + abbreviation + ")(AU|ET|-)", "$1 $2")
                     .replaceAll("(AU|ET|-)(\\b" + abbreviation + ")", "$1 $2")
                     .trim();

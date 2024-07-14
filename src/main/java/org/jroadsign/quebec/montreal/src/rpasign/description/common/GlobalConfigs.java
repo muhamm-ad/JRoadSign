@@ -35,30 +35,29 @@ public class GlobalConfigs {
      /* Define a regex pattern to capture a {@link WeeklyDays}
      /* This will match patterns like "LUN AU VEN", "MAR A JEU", "DIM - SAM", etc
      /**************************************************************************************************/
-    public static final String ALL_TIME_PATTERN = "EN\\s+TOUT\\s+TEMPS";
+    public static final String ALL_TIME_PATTERN = "\\bEN\\s+TOUT\\s+TEMPS\\b";
     public static final String ALL_TIMES = "EN_TOUT_TEMPS";
-    public static final String EXCEPT_PATTERN = "\\s+EXCEPTE";
-    public static final String ALL_TIME_EXCEPT_PATTERN = ALL_TIME_PATTERN + EXCEPT_PATTERN;
+    public static final String ALL_TIME_EXCEPT_PATTERN = "\\b" + ALL_TIME_PATTERN + "\\s+EXCEPTE" + "\\b";
     public static final String ALL_TIMES_EXCEPT = "EN_TOUT_TEMPS_EXCEPTE";
-    public static final String SCHOOL_DAYS_PATTERN = "JOURS\\s+D'ECOLES?";
+    public static final String SCHOOL_DAYS_PATTERN = "\\bJOURS\\s+D'ECOLES?\\b";
     public static final String SCHOOL_DAYS = "JOURS_D_ECOLES";
-    public static final String CLASS_DAYS_PATTERN = "JOURS\\s+DE?\\s+CLASSE";
+    public static final String CLASS_DAYS_PATTERN = "\\bJOURS\\s+DE?\\s+CLASSE\\b";
     public static final String CLASS_DAYS = "JOURS_DE_CLASSE";
-    public static final String WEEK_END_PATTERN = "WEEKEND";
+    public static final String WEEK_END_PATTERN = "\\bWEEKEND\\b";
     public static final String WEEK_END = "WEEK_END";
-    public static final String MONDAY_PATTERN = "LUN(?:DI)?";
+    public static final String MONDAY_PATTERN = "\\bLUN(?:DI)?\\b";
     public static final String MONDAY = "LUN";
-    public static final String TUESDAY_PATTERN = "MAR(?:DI)?";
+    public static final String TUESDAY_PATTERN = "\\bMAR(?!S)(?:DI)?\\b";
     public static final String TUESDAY = "MAR";
-    public static final String WEDNESDAY_PATTERN = "MER(?:CREDI)?";
+    public static final String WEDNESDAY_PATTERN = "\\bMER(?:CREDI)?\\b";
     public static final String WEDNESDAY = "MER";
-    public static final String THURSDAY_PATTERN = "JEU(?:DI)?";
+    public static final String THURSDAY_PATTERN = "\\bJEU(?:DI)?\\b";
     public static final String THURSDAY = "JEU";
-    public static final String FRIDAY_PATTERN = "VEN(?:DREDI)?";
+    public static final String FRIDAY_PATTERN = "\\bVEN(?:DREDI)?\\b";
     public static final String FRIDAY = "VEN";
-    public static final String SATURDAY_PATTERN = "SAM(?:EDI)?";
+    public static final String SATURDAY_PATTERN = "\\bSAM(?:EDI)?\\b";
     public static final String SATURDAY = "SAM";
-    public static final String SUNDAY_PATTERN = "DIM(?:ANCHE)?";
+    public static final String SUNDAY_PATTERN = "\\bDIM(?:ANCHE)?\\b";
     public static final String SUNDAY = "DIM";
     public static final String WEEKLY_DAYS_EXPRESSION_PATTERN =
             ALL_TIME_EXCEPT_PATTERN + "|" + ALL_TIME_PATTERN + "|"

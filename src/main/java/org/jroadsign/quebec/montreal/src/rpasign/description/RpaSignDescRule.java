@@ -40,7 +40,6 @@ public class RpaSignDescRule {
     }
 
     public RpaSignDescRule(String strRuleDesc) {
-        // String cleanedStrRuleDesc = RoadSignDescCleaner.cleanDescription(strRuleDesc);
         RpaSignDescParser rpaSignDescParser = new RpaSignDescParser(strRuleDesc);
 
         this.parkingAuthorized = rpaSignDescParser.isParkingAuthorized();

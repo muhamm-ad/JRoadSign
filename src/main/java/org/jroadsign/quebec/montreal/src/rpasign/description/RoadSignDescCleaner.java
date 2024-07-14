@@ -7,6 +7,7 @@ import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfig
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +16,16 @@ public class RoadSignDescCleaner {
     private RoadSignDescCleaner() {
     }
 
-    public static @NotNull String cleanDescription(@NotNull String strDescription, RpaSignCode code) {
+    /**
+     * This method Cleans up the given description by performing several operations on it.
+     * It normalizes the string to upper case, removes possible prefixes, extra spaces, unwanted characters,
+     * misspellings, and adds spaces where needed.
+     *
+     * @param strDescription The original description to be cleaned.
+     * @param code           The RpaSignCode used to determine if a specific cleaning operation is required.
+     * @return A cleaned version of the original description.
+     */
+    public static @NotNull String cleanDescription(@NotNull String strDescription, @NotNull RpaSignCode code) {
         if (code.getCode().startsWith("S") && !strDescription.startsWith("\\P")) {
             strDescription = "\\P " + strDescription;
         }
@@ -35,7 +45,7 @@ public class RoadSignDescCleaner {
         String cleanedDescription = strDescription.toUpperCase().trim();
         cleanedDescription = handleNoParking(removeUnnecessaryCharacters(cleanedDescription)).trim();
 
-        // cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
+        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
         cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
         return cleanedDescription.trim();
@@ -58,6 +68,12 @@ public class RoadSignDescCleaner {
                 .replace("1ER", "1");
     }
 
+    /**
+     * This method handles the authorization case of parking.
+     *
+     * @param description The original description to be handled.
+     * @return The description after handling the authorization case with '\P'.
+     */
     private static @NotNull String handleNoParking(@NotNull String description) {
         return description
                 .replace("(NO PARKING)", "\\P")
@@ -69,30 +85,44 @@ public class RoadSignDescCleaner {
     /**
      * This method reformats the time range string in the description.
      * It is used to fix intervals like "SAM 17H A LUN 17H"
-     * to something like "17H-23H59 SAM; 00H-23H59 DIM; 00H-17H LUN"
+     * to something like "17H-23H59 SAM; 00H00-23H59 DIM; 00H00-17H LUN"
      *
      * @param description The original description.
      * @return The description with the day-hour string reformatted.
      */
-    private static String reformatDailyTimeIntervals(String description) {
+    private static @NotNull String reformatDailyTimeIntervals(@NotNull String description) {
 
-        String timePattern = "\\d{1,2}\\s*H\\s*(?:\\d{1,2})?"; // UPDATE: use the global variable
+        boolean parkingAuthorized = !description.startsWith("\\P");
 
-        String formattedTimePattern = "(" + String.format(timePattern, "\\s*") + ")";
+        String formattedTimePattern = "(\\d{1,2}\\s*H\\s*(?:\\d{1,2})?)";
         String formattedWeeklyDayPattern = "(" + GlobalConfigs.WEEKLY_DAYS_PATTERN + ")";
 
-        Pattern pattern = Pattern.compile(formattedTimePattern + "\\s*" + formattedWeeklyDayPattern
-                        + "\\s*(?:AU?)\\s*" + formattedTimePattern + formattedWeeklyDayPattern,
-                Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE
-        );
+        String fullPattern = formattedTimePattern + "\\s*" + formattedWeeklyDayPattern
+                + "\\s*(?:AU?)\\s*" + formattedTimePattern + "\\s*" + formattedWeeklyDayPattern;
+
+        Pattern pattern = Pattern.compile(fullPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+        for (Map.Entry<String, String> entry : GlobalConfigs.WEEKLY_DAYS_ABBREVIATIONS_MAP.entrySet()) {
+            String abbreviation = entry.getValue().trim();
+            // Replace full day names with abbreviations
+            description = description.replaceAll(entry.getKey(), abbreviation).trim();
+        }
 
         Matcher matcher = pattern.matcher(description);
         StringBuilder sb = new StringBuilder();
 
-        if (matcher.find()) {
-            String startTime = matcher.group(1);
+        int part = 0;
+
+        while (matcher.find()) {
+            if (part >= 1)
+                sb.append(parkingAuthorized ? "; " : "; \\P ");
+            else
+                sb.append(parkingAuthorized ? "" : "\\P ");
+            part++;
+
+            String startTime = matcher.group(1).replaceAll("\\s*", "");
             String startDay = matcher.group(2);
-            String endTime = matcher.group(3);
+            String endTime = matcher.group(3).replaceAll("\\s*", "");
             String endDay = matcher.group(4);
 
             // Convert the days into an ordered list, for example ["SAM", "DIM", "LUN"] for "SAM" to "LUN"
@@ -100,19 +130,19 @@ public class RoadSignDescCleaner {
 
             for (int i = 0; i < days.size(); i++) {
                 if (i == 0) {
-                    sb.append(startTime).append("-23H59 ").append(days.get(i)).append("; ");
+                    sb.append(startTime).append("-23H59 ").append(days.get(i)).append(parkingAuthorized ? "; " : "; \\P ");
                 } else if (i == days.size() - 1) {
-                    sb.append("00H-").append(endTime).append(" ").append(days.get(i));
+                    sb.append("00H00-").append(endTime).append(" ").append(days.get(i));
                 } else {
-                    sb.append("00H-23H59 ").append(days.get(i)).append("; ");
+                    sb.append("00H00-23H59 ").append(days.get(i)).append(parkingAuthorized ? "; " : "; \\P ");
                 }
             }
         }
 
-        return sb.toString();
+        return sb.isEmpty() ? description : sb.toString();
     }
 
-    private static List<String> getDaysInRange(String startDay, String endDay) {
+    private static @NotNull List<String> getDaysInRange(@NotNull String startDay, @NotNull String endDay) {
         List<String> daysOfWeek = Arrays.asList("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM");
         List<String> daysInRange = new ArrayList<>();
 
@@ -168,19 +198,26 @@ public class RoadSignDescCleaner {
     }
 
     /**
-     * This method inserts a space between a letter and a number if one does not exist.
+     * This method inserts a space between a letter and a digit if one does not exist, except 'H' for times
      *
      * @param description The original description.
-     * @return The description with spaces added between letters and numbers.
+     * @return The description with spaces added between letters (except H or h) and digits.
      */
     private static @NotNull String insertSpaceBetweenLetterAndNumber(@NotNull String description) {
+        /*return description
+                .replaceAll("(\\d)([A-Za-z])", "$1 $2")
+                .replaceAll("([A-Za-z])(\\d)", "$1 $2")
+                .replaceAll("(\\d) ([Hh]) ([\\d-])", "$1$2$3")
+                .replaceAll("(\\d) ([Hh])", "$1$2"); // for times*/
+
         Pattern letterNumberPattern = Pattern.compile("(\\p{L})(\\d)");
         Matcher letterNumberMatcher = letterNumberPattern.matcher(description);
 
         StringBuilder formattedDescription = new StringBuilder();
         while (letterNumberMatcher.find()) {
-            letterNumberMatcher.appendReplacement(
-                    formattedDescription, letterNumberMatcher.group(1) + " " + letterNumberMatcher.group(2));
+            if (!letterNumberMatcher.group(1).equalsIgnoreCase("H"))
+                letterNumberMatcher.appendReplacement(
+                        formattedDescription, letterNumberMatcher.group(1) + " " + letterNumberMatcher.group(2));
         }
         letterNumberMatcher.appendTail(formattedDescription);
         return formattedDescription.toString();

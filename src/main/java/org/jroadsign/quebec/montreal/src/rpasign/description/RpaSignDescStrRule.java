@@ -28,13 +28,13 @@ public class RpaSignDescStrRule {
 
             case SS_JM: // ex : '\P 07h-16h LUN A VEN ET 07h-12h SAMEDI'
                 return List.of(strDesc.split("ET"));
-
             case SD_OP: // ex : '\P 18h-24h LUN A VEN  +  08h-24h SAM ET DIM'
                 return List.of(strDesc.split("\\+"));
 
-
-            case SLR_ST_111: // FIXME ex : '17H MAR À 17H MER - 17H JEU À 17H VEN - 17H SAM À 17H LUN'
-                return List.of(strDesc.split("-"));
+            case SLR_ST_111:
+                // ex : '17H MAR À 17H MER; 17H JEU À 17H VEN; 17H SAM À 17H LUN'
+                // or '\P 17H MAR À 17H MER; \P 17H JEU À 17H VEN; \P 17H SAM À 17H LUN'
+                return List.of(strDesc.split(";"));
 
             case SLR_ST_79: // TODO ex : '8H À 12H LUN MER VEN 13H À 18H MAR JEU'
                 return List.of(strDesc);
