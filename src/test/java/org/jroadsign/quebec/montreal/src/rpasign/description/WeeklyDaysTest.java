@@ -1,7 +1,5 @@
-package org.jroadsign.quebec.montreal.rpasign.description;
+package org.jroadsign.quebec.montreal.src.rpasign.description;
 
-import org.jroadsign.quebec.montreal.src.rpasign.description.WeekRangeExpression;
-import org.jroadsign.quebec.montreal.src.rpasign.description.WeeklyDays;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.WeeklyRangeExpException;
 import org.junit.Test;

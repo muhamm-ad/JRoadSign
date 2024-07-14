@@ -1,7 +1,6 @@
-package org.jroadsign.quebec.montreal.rpasign.description;
+package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import junit.framework.TestCase;
-import org.jroadsign.quebec.montreal.src.rpasign.description.WeekRangeExpression;
 import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
 import org.junit.Test;
 

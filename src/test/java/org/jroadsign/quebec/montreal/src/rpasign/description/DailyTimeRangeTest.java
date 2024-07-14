@@ -1,6 +1,5 @@
-package org.jroadsign.quebec.montreal.rpasign.description;
+package org.jroadsign.quebec.montreal.src.rpasign.description;
 
-import org.jroadsign.quebec.montreal.src.rpasign.description.DailyTimeRange;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
 import org.junit.Test;
 

@@ -1,6 +1,5 @@
-package org.jroadsign.quebec.montreal.rpasign.description;
+package org.jroadsign.quebec.montreal.src.rpasign.description;
 
-import org.jroadsign.quebec.montreal.src.rpasign.description.DurationMinutes;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
