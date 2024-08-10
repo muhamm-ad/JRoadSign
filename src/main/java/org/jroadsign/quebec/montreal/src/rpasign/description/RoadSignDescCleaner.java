@@ -26,24 +26,12 @@ public class RoadSignDescCleaner {
      * @return A cleaned version of the original description.
      */
     public static @NotNull String cleanDescription(@NotNull String strDescription, @NotNull RpaSignCode code) {
-        if (code.getCode().startsWith("S") && !strDescription.startsWith("\\P")) {
-            strDescription = "\\P " + strDescription;
-        }
-
-        return cleanDescription(strDescription);
-    }
-
-    /**
-     * This method cleans up the given description by performing several operations on it.
-     * It normalizes the string to upper case, removes possible prefixes, extra spaces, unwanted characters,
-     * misspellings, and adds spaces where needed.
-     *
-     * @param strDescription The original description to be cleaned.
-     * @return A cleaned version of the original description.
-     */
-    public static @NotNull String cleanDescription(@NotNull String strDescription) {
         String cleanedDescription = strDescription.toUpperCase().trim();
-        cleanedDescription = handleNoParking(removeUnnecessaryCharacters(cleanedDescription)).trim();
+        cleanedDescription = handleNoParking(removeUnnecessaryCharacters(cleanedDescription));
+
+        if (code.getCode().startsWith("S") && !cleanedDescription.startsWith("\\P")) {
+            cleanedDescription = "\\P " + cleanedDescription;
+        }
 
         cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
@@ -59,13 +47,14 @@ public class RoadSignDescCleaner {
      */
     private static @NotNull String removeUnnecessaryCharacters(@NotNull String description) {
         return description
+                .replace(".", " ")
                 .replaceAll("\\s+", " ")
-                .replace(".", "")
                 .replace("É", "E")
                 .replace("È", "E")
                 .replace("Ê", "E")
                 .replace("À", "A")
-                .replace("1ER", "1");
+                .replace("1ER", "1")
+                .trim();
     }
 
     /**
@@ -77,10 +66,13 @@ public class RoadSignDescCleaner {
     private static @NotNull String handleNoParking(@NotNull String description) {
         return description
                 .replace("(NO PARKING)", "\\P")
-                .replaceAll("STAT. INT. (DE)?", "\\P")
                 .replace("/P", "\\P")
-                .replace("\\P EXCEPTE", "\\P EN TOUT TEMPS EXCEPTE");
+                .replace("\\P EXCEPTE", "\\P EN TOUT TEMPS EXCEPTE")
+                .replaceAll("^EXCEPTE", "EN TOUT TEMPS EXCEPTE")
+                .replaceAll("STAT\\.? INT\\.? (DE\\s*)?", "\\\\P ")
+                .trim();
     }
+
 
     /**
      * This method reformats the time range string in the description.
@@ -91,6 +83,21 @@ public class RoadSignDescCleaner {
      * @return The description with the day-hour string reformatted.
      */
     private static @NotNull String reformatDailyTimeIntervals(@NotNull String description) {
+        String str = description;
+        str = reformatDailyTimeIntervals_1(str);
+        str = reformatDailyTimeIntervals_2(str);
+        return str;
+    }
+
+    /**
+     * This method reformats the time range string in the description.
+     * It is used to fix intervals like "SAM 17H A LUN 17H"
+     * to something like "17H-23H59 SAM; 00H00-23H59 DIM; 00H00-17H LUN"
+     *
+     * @param description The original description.
+     * @return The description with the day-hour string reformatted.
+     */
+    private static @NotNull String reformatDailyTimeIntervals_1(@NotNull String description) {
 
         boolean parkingAuthorized = !description.startsWith("\\P");
 
@@ -141,6 +148,69 @@ public class RoadSignDescCleaner {
 
         return sb.isEmpty() ? description : sb.toString();
     }
+
+
+    /**
+     * This method reformats the time range string in the description.
+     * It is used to fix intervals like "LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H"
+     * to something like "17H-23H59 LUN; 00H00-17H MAR; 17H-23H59 MER; 00H00-17H JEU; 17H-23H59 VEN; 00H00-17H SAM"
+     *
+     * @param description The original description.
+     * @return The description with the day-hour string reformatted.
+     */
+    private static @NotNull String reformatDailyTimeIntervals_2(@NotNull String description) {
+
+        boolean parkingAuthorized = !description.startsWith("\\P");
+
+        String formattedTimePattern = "(\\d{1,2}\\s*H\\s*(?:\\d{1,2})?)";
+        String formattedWeeklyDayPattern = "(" + GlobalConfigs.WEEKLY_DAYS_PATTERN + ")";
+
+        String intervalPattern = formattedWeeklyDayPattern + "\\s*" + formattedTimePattern
+                + "\\s*(?:À|A)\\s*" + formattedWeeklyDayPattern + "\\s*" + formattedTimePattern;
+
+        Pattern pattern = Pattern.compile(intervalPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+        for (Map.Entry<String, String> entry : GlobalConfigs.WEEKLY_DAYS_ABBREVIATIONS_MAP.entrySet()) {
+            String abbreviation = entry.getValue().trim();
+            // Replace full day names with abbreviations
+            description = description.replaceAll(entry.getKey(), abbreviation).trim();
+        }
+
+        Matcher matcher = pattern.matcher(description);
+        StringBuilder sb = new StringBuilder();
+
+        int part = 0;
+
+        while (matcher.find()) {
+            if (part >= 1)
+                sb.append(parkingAuthorized ? "; " : "; \\P ");
+            else
+                sb.append(parkingAuthorized ? "" : "\\P ");
+            part++;
+
+            String startDay = matcher.group(1);
+            String startTime = matcher.group(2).replaceAll("\\s*", "");
+            String endDay = matcher.group(3);
+            String endTime = matcher.group(4).replaceAll("\\s*", "");
+
+            // Convert the days into an ordered list, for example ["LUN", "MAR"] for "LUN" to "MAR"
+            List<String> days = getDaysInRange(startDay, endDay);
+
+            for (int i = 0; i < days.size(); i++) {
+                if (i == 0) {
+                    sb.append(startTime).append("-23H59 ").append(days.get(i)).append(parkingAuthorized ? "; " : "; \\P ");
+                } else if (i == days.size() - 1) {
+                    sb.append("00H00-").append(endTime).append(" ").append(days.get(i));
+                } else {
+                    sb.append("00H00-23H59 ").append(days.get(i)).append(parkingAuthorized ? "; " : "; \\P ");
+                }
+            }
+        }
+
+        return sb.isEmpty() ? description : sb.toString();
+    }
+
+
 
     private static @NotNull List<String> getDaysInRange(@NotNull String startDay, @NotNull String endDay) {
         List<String> daysOfWeek = Arrays.asList("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM");

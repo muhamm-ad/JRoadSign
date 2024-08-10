@@ -8,18 +8,12 @@ import java.lang.reflect.Method;
 public class RoadSignDescCleanerTest extends TestCase {
 
     public void testCleanDescription() {
-        assertEquals("", RoadSignDescCleaner.cleanDescription(""));
         // TODO : Add tests
     }
 
-    public void testTestCleanDescriptionCode() {
-        // TODO : Add tests
-    }
-
-    public void testReformatDailyTimeIntervals()
-            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public void testReformatDailyTimeIntervals() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Access the private method
-        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals", String.class);
+        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_1", String.class);
         method.setAccessible(true);
 
         // Test cases
@@ -44,11 +38,64 @@ public class RoadSignDescCleanerTest extends TestCase {
         assertEquals("04H00-23H59 MER; 00H00-23H59 JEU; 00H00-12H00 VEN", method.invoke(null, "04H00 MER A 12H00 VEN"));
         assertEquals("22H-23H59 VEN; 00H00-23H59 SAM; 00H00-06H DIM", method.invoke(null, "22H VEN A 06H DIMANCHE"));
 
-        assertEquals("17H-23H59 MAR; 00H00-17H MER; 17H-23H59 JEU; 00H00-17H VEN; 17H-23H59 SAM; 00H00-23H59 DIM; 00H00-17H LUN",
-                method.invoke(null, "17H MAR A 17H MER - 17H JEU A 17H VEN - 17H SAM A 17H LUN"));
+        assertEquals("17H-23H59 MAR; 00H00-17H MER; 17H-23H59 JEU; 00H00-17H VEN; 17H-23H59 SAM; 00H00-23H59 DIM; 00H00-17H LUN", method.invoke(null, "17H MAR A 17H MER - 17H JEU A 17H VEN - 17H SAM A 17H LUN"));
 
-        assertEquals("\\P 17H-23H59 MAR; \\P 00H00-17H MER; \\P 17H-23H59 JEU; \\P 00H00-17H VEN; \\P 17H-23H59 SAM; \\P 00H00-23H59 DIM; \\P 00H00-17H LUN",
-                method.invoke(null, "\\P 17H MARDI A 17H MER - 17H JEUDI A 17H VEN - 17H SAM A17H LUN"));
+        assertEquals("\\P 17H-23H59 MAR; \\P 00H00-17H MER; \\P 17H-23H59 JEU; \\P 00H00-17H VEN; \\P 17H-23H59 SAM; \\P 00H00-23H59 DIM; \\P 00H00-17H LUN", method.invoke(null, "\\P 17H MARDI A 17H MER - 17H JEUDI A 17H VEN - 17H SAM A17H LUN"));
+    }
+
+    public void testReformatTimeIntervalsNewFormat() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        // Access the private method
+        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_2", String.class);
+        method.setAccessible(true);
+
+        // Test cases for various scenarios
+        assertEquals("17H-23H59 LUN; 00H00-17H MAR; 17H-23H59 MER; 00H00-17H JEU; 17H-23H59 VEN; 00H00-17H SAM",
+                method.invoke(null, "LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H"));
+
+        assertEquals("08H-23H59 LUN; 00H00-12H MAR; 12H-23H59 MAR; 00H00-18H MER",
+                method.invoke(null, "LUN 08H À MAR 12H - MAR 12H À MER 18H"));
+
+        assertEquals("09H-23H59 LUN; 00H00-09H MAR; 10H-23H59 MAR; 00H00-10H MER; 11H-23H59 MER; 00H00-11H JEU",
+                method.invoke(null, "LUN 09H À MAR 09H - MAR 10H À MER 10H - MER 11H À JEU 11H"));
+
+        assertEquals("\\P 17H-23H59 LUN; \\P 00H00-17H MAR; \\P 17H-23H59 MER; \\P 00H00-17H JEU; \\P 17H-23H59 VEN; \\P 00H00-17H SAM",
+                method.invoke(null, "\\P LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H"));
+
+        assertEquals("17H-23H59 VEN; 00H00-17H SAM; 17H-23H59 SAM; 00H00-06H DIM",
+                method.invoke(null, "VEN 17H À SAM 17H - SAM 17H À DIM 06H"));
+
+        assertEquals("22H-23H59 LUN; 00H00-23H59 MAR; 00H00-23H59 MER; 00H00-23H59 JEU; 00H00-22H VEN",
+                method.invoke(null, "LUN 22H À VEN 22H"));
+
+        assertEquals("09H00-23H59 LUN; 00H00-17H MAR; 17H-23H59 MER; 00H00-23H59 JEU; 00H00-18H VEN",
+                method.invoke(null, "LUN 09H00 À MAR 17H - MER 17H À VEN 18H"));
+
+        assertEquals("08H30-23H59 LUN; 00H00-23H59 MAR; 00H00-17H MER",
+                method.invoke(null, "LUN 08H30 À MER 17H"));
+
+        assertEquals("12H-23H59 SAM; 00H00-23H59 DIM; 00H00-18H LUN",
+                method.invoke(null, "SAM 12H À LUN 18H"));
+
+        assertEquals("23H-23H59 LUN; 00H00-23H59 MAR; 00H00-23H59 MER; 00H00-23H59 JEU; 00H00-23H VEN",
+                method.invoke(null, "LUN 23H À VEN 23H"));
+
+        assertEquals("07H-23H59 VEN; 00H00-23H59 SAM; 00H00-07H DIM",
+                method.invoke(null, "VEN 07H À DIM 07H"));
+
+        assertEquals("06H30-23H59 SAM; 00H00-23H59 DIM; 00H00-10H LUN",
+                method.invoke(null, "SAM 06H30 À LUN 10H"));
+
+        assertEquals("04H00-23H59 MER; 00H00-23H59 JEU; 00H00-12H VEN",
+                method.invoke(null, "MER 04H00 À VEN 12H"));
+
+        assertEquals("22H-23H59 VEN; 00H00-23H59 SAM; 00H00-06H DIM",
+                method.invoke(null, "VEN 22H À DIM 06H"));
+
+        assertEquals("17H-23H59 LUN; 00H00-17H MAR; 17H-23H59 MER; 00H00-17H JEU; 17H-23H59 VEN; 00H00-23H59 SAM; 00H00-17H DIM",
+                method.invoke(null, "LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À DIM 17H"));
+
+        assertEquals("\\P 17H-23H59 LUN; \\P 00H00-17H MAR; \\P 17H-23H59 MER; \\P 00H00-17H JEU; \\P 17H-23H59 VEN; \\P 00H00-23H59 SAM; \\P 00H00-17H DIM",
+                method.invoke(null, "\\P LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À DIM 17H"));
     }
 
 
@@ -78,7 +125,7 @@ public class RoadSignDescCleanerTest extends TestCase {
         assertEquals("\\P 01 FEVRIER A 10 AVRIL", method.invoke(null, "\\P 01 FEVRIER A 10AVRIL"));
         assertEquals("\\P 20 JANVIER A 10 DECEMBRE", method.invoke(null, "\\P 20JANVIER A 10DECEMBRE"));
 
-        assertEquals("\\P MARS 01 A DEC 01", method.invoke(null, "\\P MARS01 A DEC 01"));
+        assertEquals("\\P MARS 01 A DEC 01", method.invoke(null, "\\P MARS01 A DEC01"));
         assertEquals("\\P DEC 01 A AVRIL 01", method.invoke(null, "\\P DEC 01 A AVRIL02"));
         assertEquals("\\P JUIN 01 A JUIL 01", method.invoke(null, "\\P JUIN01 A JUIL01"));
     }

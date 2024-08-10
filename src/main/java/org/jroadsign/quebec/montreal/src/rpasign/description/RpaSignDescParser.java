@@ -305,11 +305,14 @@ public class RpaSignDescParser {
                 .replaceAll("[^\\p{L}\\p{N}\\s]", " ")
                 .replaceAll("\\s+", " ")
                 .replaceAll("(\\d+)\\s*X\\s*(\\d+)", "$1 X $2")
-                // If the cleanedDescription is "DE", "DU" or "ET" remove it
-                .replaceAll("^\\s*DE\\s*$", "")
-                .replaceAll("\\s+DE\\s*$", "")
-                .replaceAll("^\\s*DU\\s*$", "")
-                .replaceAll("^\\s+ET\\s*$", "").trim();
+                .replaceAll("\\s*DE\\s*$", "")
+                .replaceAll("\\s*DU\\s*$", "")
+                // .replaceAll("\\s*ET\\s*$", "")
+                .replaceAll("^\\s*DE\\s*", "")
+                .replaceAll("^\\s*DU\\s*", "")
+                .replaceAll("^\\s*ET\\s*", "")
+                // .replaceAll("\\s*MAX\\s*$", "")
+                .trim();
 
         if (GlobalConfigs.LIST_OF_METADATA_TO_IGNORE.contains(cleanedDescription) || cleanedDescription.isEmpty())
             return null;
