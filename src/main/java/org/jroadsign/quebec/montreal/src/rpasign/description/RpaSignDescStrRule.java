@@ -11,41 +11,29 @@ public class RpaSignDescStrRule {
 
     /**
      * Note: strDesc should be cleaned before calling this methode
-     * cleaning should exclude '-', ','
+     * cleaning should exclude `-`, `,`, `+`, `;` and `ET`
      */
     public static List<String> divider(String strDesc, RpaSignCode code) {
 
         switch (code) {
             case SLR_ST_75: // ex : '9H À 17H LUN MER VEN 15 NOV AU 15 MARS, 11H À 12H MERCREDI 15 MARS AU 15 NOV'
                 return List.of(strDesc.split(","));
-            case SLR_ST_98: // ex : '9H À 17H MAR JEU 15 NOV AU 15 MARS - 11H À 12H JEUDI 15 MARS AU 15 NOV'
-                return List.of(strDesc.split("-"));
-
-            case SLR_ST_82: // ex : 'LUN MER VEN 8H À 12H - MAR JEU 13H À 17H'
-                return List.of(strDesc.split("-"));
-            case SLR_ST_84: // ex : 'LUN MER VEN 8H À 12H - MAR JEU 14H À 17H'
-                return List.of(strDesc.split("-"));
 
             case SS_JM: // ex : '\P 07h-16h LUN A VEN ET 07h-12h SAMEDI'
                 return List.of(strDesc.split("ET"));
             case SD_OP: // ex : '\P 18h-24h LUN A VEN  +  08h-24h SAM ET DIM'
                 return List.of(strDesc.split("\\+"));
 
-            case SLR_ST_111:
+            case SLR_ST_98, SLR_ST_82, SLR_ST_84:
+                // ex : '9H À 17H MAR JEU 15 NOV AU 15 MARS - 11H À 12H JEUDI 15 MARS AU 15 NOV'
+                // ex : 'LUN MER VEN 8H À 12H - MAR JEU 13H À 17H'
+                return List.of(strDesc.split("-"));
+
+            case SLR_ST_111, SLR_ST_172, SLR_ST_174, SLR_ST_175, SLR_ST_80, SLR_ST_81:
                 // ex : '17H MAR À 17H MER; 17H JEU À 17H VEN; 17H SAM À 17H LUN'
                 // or '\P 17H MAR À 17H MER; \P 17H JEU À 17H VEN; \P 17H SAM À 17H LUN'
+                // or '120 MIN - LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H'
                 return List.of(strDesc.split(";"));
-
-            case SLR_ST_172: // TODO ex: '120 MIN - LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H'
-                return List.of(strDesc);
-            case SLR_ST_174: // TODO ex: '120 MIN - MAR 17H À MER 17H - JEU 17H À VEN 17H - SAM 17H À LUN 17H'
-                return List.of(strDesc);
-            case SLR_ST_175: // TODO ex: '120 MIN - MAR 18H À MER 18H - JEU 18H À VEN 18H - SAM 18H À LUN 18H'
-                return List.of(strDesc);
-            case SLR_ST_80: // TODO ex: 'LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H'
-                return List.of(strDesc);
-            case SLR_ST_81: // TODO ex: 'LUN 18H À MAR 18H - MER 18H À JEU 18H - VEN 18H À SAM 18H'
-                return List.of(strDesc);
 
 
             case SB_NX: // TODO ex: '\P 23h30-00h30  MAR A MER, VEN A SAM  1 MARS AU 1 DEC. '
