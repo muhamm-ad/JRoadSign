@@ -33,6 +33,11 @@ public class RoadSignDescCleaner {
             cleanedDescription = "\\P " + cleanedDescription;
         }
 
+        for (Map.Entry<String, String> entry : GlobalConfigs.WEEKLY_DAYS_ABBREVIATIONS_MAP.entrySet()) {
+            String abbreviation = entry.getValue().trim();
+            cleanedDescription = cleanedDescription.replaceAll(entry.getKey(), abbreviation).trim();
+        }
+
         cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
         cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
@@ -118,11 +123,6 @@ public class RoadSignDescCleaner {
         Pattern pattern1 = Pattern.compile(fullIntervalPattern1, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
         Pattern pattern2 = Pattern.compile(fullIntervalPattern2, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
-        for (Map.Entry<String, String> entry : GlobalConfigs.WEEKLY_DAYS_ABBREVIATIONS_MAP.entrySet()) {
-            String abbreviation = entry.getValue().trim();
-            description = description.replaceAll(entry.getKey(), abbreviation).trim();
-        }
-
         Matcher matcher1 = pattern1.matcher(description);
         Matcher matcher2 = pattern2.matcher(description);
 
@@ -204,22 +204,23 @@ public class RoadSignDescCleaner {
      * @return The description with the day-hour string reformatted.
      */
     private static @NotNull String reformatDailyTimeIntervals_2(@NotNull String description) {
+        String descCopy = description;
         StringBuilder reformattedIntervals = new StringBuilder();
-        boolean isParkingAuthorized = !description.startsWith("\\P");
-        description = description.replace("\\P", "").trim();
+        boolean isParkingAuthorized = !descCopy.startsWith("\\P");
+        descCopy = descCopy.replace("\\P", "").trim();
 
         // Extract the duration prefix if present
         String durationPrefixPattern = "(\\d+\\s*MIN)(?:\\s*-\\s*)?";
         Pattern durationPattern = Pattern.compile(durationPrefixPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
         String extractedDurationPrefix = "";
-        Matcher durationMatcher = durationPattern.matcher(description);
+        Matcher durationMatcher = durationPattern.matcher(descCopy);
         if (durationMatcher.find()) {
             extractedDurationPrefix = durationMatcher.group(1);
-            description = description.substring(durationMatcher.end()).trim();  // Remove the duration prefix from the description
+            descCopy = descCopy.substring(durationMatcher.end()).trim();  // Remove the duration prefix from the description
         }
 
-        description = description.replaceAll("(\\s)?-(\\s)?", " ");
+        descCopy = descCopy.replaceAll("(\\s)?-(\\s)?", " ");
 
         String timeRangePattern = "\\d{1,2}\\s*H\\s*(?:\\d{1,2})?\\s*(?:À|A)\\s*\\d{1,2}\\s*H\\s*(?:\\d{1,2})?";
         String dayPattern = "(?:(?:" + GlobalConfigs.WEEKLY_DAYS_PATTERN + ")\\s*)+";
@@ -227,16 +228,16 @@ public class RoadSignDescCleaner {
         String timeDayPattern = "^(" + timeRangePattern + ")\\s*(" + dayPattern + ")";
         String dayTimePattern = "^(" + dayPattern + ")\\s*(" + timeRangePattern + ")";
 
-        while (!description.isEmpty()) {
-            Matcher timeDayMatcher = Pattern.compile(timeDayPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(description);
-            Matcher dayTimeMatcher = Pattern.compile(dayTimePattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(description);
+        while (!descCopy.isEmpty()) {
+            Matcher timeDayMatcher = Pattern.compile(timeDayPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
+            Matcher dayTimeMatcher = Pattern.compile(dayTimePattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
 
             if (timeDayMatcher.find()) {
                 processMatchedInterval(reformattedIntervals, isParkingAuthorized, timeDayMatcher.group(1), timeDayMatcher.group(2));
-                description = description.substring(timeDayMatcher.end()).trim();
+                descCopy = descCopy.substring(timeDayMatcher.end()).trim();
             } else if (dayTimeMatcher.find()) {
                 processMatchedInterval(reformattedIntervals, isParkingAuthorized, dayTimeMatcher.group(2), dayTimeMatcher.group(1));
-                description = description.substring(dayTimeMatcher.end()).trim();
+                descCopy = descCopy.substring(dayTimeMatcher.end()).trim();
             } else { // No more patterns matched, exit loop
                 break;
             }
@@ -271,7 +272,6 @@ public class RoadSignDescCleaner {
             reformattedIntervals.append(timeRange).append(" ").append(day);
         }
     }
-
 
     private static @NotNull List<String> getDaysInRange(@NotNull String startDay, @NotNull String endDay) {
         List<String> daysOfWeek = Arrays.asList("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM");

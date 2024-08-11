@@ -44,6 +44,7 @@ public class RpaSignDescParser {
     private String extractInformations(String description) {
         // Compile regular expressions for pattern matching
         Pattern parkingDurationPattern = Pattern.compile(
+                // TODO : add (?:MAX(?:IMUM))? befor and after
                 "\\b(" + String.format(GlobalConfigs.DURATION_PATTERN, "\\s*") + ")\\b",
                 Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
@@ -305,13 +306,12 @@ public class RpaSignDescParser {
                 .replaceAll("[^\\p{L}\\p{N}\\s]", " ")
                 .replaceAll("\\s+", " ")
                 .replaceAll("(\\d+)\\s*X\\s*(\\d+)", "$1 X $2")
-                .replaceAll("\\s*DE\\s*$", "")
-                .replaceAll("\\s*DU\\s*$", "")
-                // .replaceAll("\\s*ET\\s*$", "")
-                .replaceAll("^\\s*DE\\s*", "")
-                .replaceAll("^\\s*DU\\s*", "")
-                .replaceAll("^\\s*ET\\s*", "")
-                // .replaceAll("\\s*MAX\\s*$", "")
+                .replaceAll("\\s+DE\\s*$", "")
+                .replaceAll("\\s+DU\\s*$", "")
+                .replaceAll("^\\s*DE\\s+", "")
+                .replaceAll("^\\s*DU\\s+", "")
+                .replaceAll("^\\s*ET\\s+", "")
+                .replaceAll("\\s*MAX\\s*$", "")
                 .trim();
 
         if (GlobalConfigs.LIST_OF_METADATA_TO_IGNORE.contains(cleanedDescription) || cleanedDescription.isEmpty())
