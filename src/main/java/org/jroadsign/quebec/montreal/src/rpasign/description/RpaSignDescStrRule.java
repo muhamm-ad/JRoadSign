@@ -35,6 +35,15 @@ public class RpaSignDescStrRule {
                 // or '120 MIN - LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H'
                 return List.of(strDesc.split(";"));
 
+            case SLR_ST_79, SLR_ST_105, SLR_ST_106, SLR_ST_107:
+                // ex : '8H À 12H LUN MER VEN 13H À 18H MAR JEU'
+                // or : 'MAR JEU 8H À 12H LUN MER VEN 14H À 17H'
+                return List.of(strDesc.split(";"));
+
+
+            case SLR_ST_135:
+                // TODO ex : '30 MIN - MAR MER VEN - 9H À 16H30 - LUN JEU - 12H À 16H30'
+                return List.of(strDesc);
 
             case SB_NX: // TODO ex: '\P 23h30-00h30  MAR A MER, VEN A SAM  1 MARS AU 1 DEC. '
                 return List.of(strDesc);
@@ -46,17 +55,6 @@ public class RpaSignDescStrRule {
                 return List.of(strDesc);
 
 
-            case SLR_ST_79: // TODO ex : '8H À 12H LUN MER VEN 13H À 18H MAR JEU'
-                return List.of(strDesc);
-            case SLR_ST_105: // TODO ex : '8H À 12H MAR JEU 13H À 17H LUN MER VEN'
-                return List.of(strDesc);
-            case SLR_ST_106: // TODO ex : '8H À 12H MAR JEU 13H À 18H LUN MER VEN'
-                return List.of(strDesc);
-
-            case SLR_ST_107: // TODO ex : 'MAR JEU 8H À 12H LUN MER VEN 14H À 17H'
-                return List.of(strDesc);
-            case SLR_ST_135: // TODO ex : '30 MIN - MAR MER VEN - 9H À 16H30 - LUN JEU - 12H À 16H30'
-                return List.of(strDesc);
 
 
             default:

@@ -11,9 +11,9 @@ public class RoadSignDescCleanerTest extends TestCase {
         // TODO : Add tests
     }
 
-    public void testReformatDailyTimeIntervals_1() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public void testReformatDailyTimeIntervals_1_1() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Access the private method
-        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals", String.class);
+        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_1", String.class);
         method.setAccessible(true);
 
         // Test cases
@@ -98,9 +98,9 @@ public class RoadSignDescCleanerTest extends TestCase {
     }
 
 
-    public void testReformatDailyTimeIntervals_2() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public void testReformatDailyTimeIntervals_1_2() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Access the private method
-        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals", String.class);
+        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_1", String.class);
         method.setAccessible(true);
 
         // Test cases for various scenarios
@@ -153,6 +153,52 @@ public class RoadSignDescCleanerTest extends TestCase {
                 method.invoke(null, "\\P LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À DIM 17H"));
     }
 
+    public void testReformatDailyTimeIntervals_2_1() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_2", String.class);
+        method.setAccessible(true);
+
+        assertEquals("8H-12H LUN; 8H-12H MER; 8H-12H VEN; 13H-18H MAR; 13H-18H JEU",
+                method.invoke(null, "8H À 12H LUN MER VEN 13H À 18H MAR JEU"));
+
+        assertEquals("\\P 8H-12H LUN; \\P 8H-12H MER; \\P 8H-12H VEN; \\P 13H-18H MAR; \\P 13H-18H JEU",
+                method.invoke(null, "\\P 8H À 12H LUN MER VEN 13H À 18H MAR JEU"));
+
+        assertEquals("7H-11H LUN; 7H-11H MER; 7H-11H VEN; 12H-15H MAR; 12H-15H JEU",
+                method.invoke(null, "7H À 11H LUN MER VEN 12H À 15H MAR JEU"));
+
+        assertEquals("6H-10H LUN; 6H-10H MER; 12H-16H VEN; 12H-16H SAM",
+                method.invoke(null, "6H À 10H LUN MER 12H À 16H VEN SAM"));
+
+    }
+
+    public void testReformatDailyTimeIntervals_2_2() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_2", String.class);
+        method.setAccessible(true);
+
+        assertEquals("9H-12H LUN; 9H-12H MAR; 14H-17H MER; 14H-17H JEU; 14H-17H VEN",
+                method.invoke(null, "LUN MAR 9H À 12H MER JEU VEN 14H À 17H"));
+
+        assertEquals("\\P 9H-12H LUN; \\P 9H-12H MAR; \\P 14H-17H MER; \\P 14H-17H JEU; \\P 14H-17H VEN",
+                method.invoke(null, "\\P LUN MAR 9H À 12H MER JEU VEN 14H À 17H"));
+
+        assertEquals("10H-13H MAR; 10H-13H JEU; 16H-19H LUN; 16H-19H MER; 16H-19H VEN",
+                method.invoke(null, "MAR JEU 10H À 13H LUN MER VEN 16H À 19H"));
+
+        assertEquals("8H-12H MAR; 8H-12H MER; 13H-17H JEU; 13H-17H VEN",
+                method.invoke(null, "MAR MER 8H À 12H JEU VEN 13H À 17H"));
+
+        assertEquals("\\P 7H-11H LUN; \\P 7H-11H MAR; \\P 14H-18H MER; \\P 14H-18H JEU",
+                method.invoke(null, "\\P LUN MAR 7H À 11H MER JEU 14H À 18H"));
+
+        assertEquals("11H-15H LUN; 11H-15H MAR; 17H-21H JEU; 17H-21H VEN",
+                method.invoke(null, "LUN MAR 11H À 15H JEU VEN 17H À 21H"));
+
+        assertEquals("9H-13H MAR; 9H-13H JEU; 14H-18H LUN; 14H-18H VEN",
+                method.invoke(null, "MAR JEU 9H À 13H LUN VEN 14H À 18H"));
+
+        assertEquals("\\P 8H-12H MER; \\P 8H-12H VEN; \\P 13H-17H LUN; \\P 13H-17H MAR",
+                method.invoke(null, "\\P MER VEN 8H À 12H LUN MAR 13H À 17H"));
+    }
 
     public void testInsertSpaceBetweenLetterAndNumber() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         // Access the private method
