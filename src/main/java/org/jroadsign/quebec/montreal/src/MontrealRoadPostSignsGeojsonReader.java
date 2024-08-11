@@ -83,8 +83,6 @@ public class MontrealRoadPostSignsGeojsonReader {
         String signDescRpa = properties.optString("DESCRIPTION_RPA", null);
         String signCodeRpa = properties.optString("CODE_RPA", null);
 
-        RpaSign signRpa = new RpaSign(signIdRpa, signDescRpa, signCodeRpa);
-
         int signArrowCode = properties.getInt("FLECHE_PAN");
         String signToponymic = properties.optString("TOPONYME_PAN", null);
         String signCategoryDescription = properties.optString("DESCRIPTION_CAT", null);
@@ -97,6 +95,12 @@ public class MontrealRoadPostSignsGeojsonReader {
                 properties.optDouble("PAS_SUR_RUE", 0) != 0 : null;
 
         String signRepDescription = properties.optString("DESCRIPTION_REP", null);
+
+
+        // if ((!signDescRpa.startsWith("PANONCEAU")) &&
+        //         (signRepDescription.equalsIgnoreCase("Réel") ||
+        //                 signRepDescription.equalsIgnoreCase("En conception"))) {
+        RpaSign signRpa = new RpaSign(signIdRpa, signDescRpa, signCodeRpa);
 
         RoadSign roadSign = new RoadSign(signPosition, signId, signRpa, signArrowCode,
                 signToponymic, signCategoryDescription, signRepDescription);
@@ -117,7 +121,14 @@ public class MontrealRoadPostSignsGeojsonReader {
             if (!roadPost.hasSign(signId)) {
                 roadPost.addSign(roadSign);
             }
-        }
+            }
+        // } else { // DEBUG
+        //     System.out.println("Ignored :\n " +
+        //             "\tsignCodeRpa = '" + signCodeRpa + "'" +
+        //             "\tsignDescRpa = '" + signDescRpa + "'" +
+        //             "\tsignRepDescription = '" + signRepDescription + "'"
+        //     );
+        // }
     }
 
 
