@@ -196,7 +196,7 @@ public class RoadSignDescCleaner {
      * It is used to fix intervals like:
      * - "8H À 12H LUN MER VEN 13H À 18H MAR JEU" to something like "8H-12H LUN; 8H-12H MER; 8H-12H VEN; 13H-18H MAR; 13H-18H JEU".
      * - "MAR JEU 8H À 12H LUN MER VEN 14H À 17H" to something like "8H-12H MAR; 8H-12H JEU; 14H-17H LUN; 14H-17H MER; 14H-17H VEN".
-     * <p>
+     *
      * Additionally, if a parking restriction prefix (`\P`) is present,
      * it ensures that the prefix is correctly applied to each segment.
      *
@@ -208,7 +208,20 @@ public class RoadSignDescCleaner {
         boolean isParkingAuthorized = !description.startsWith("\\P");
         description = description.replace("\\P", "").trim();
 
-        String timeRangePattern = "\\d{1,2}\\s*H\\s*(?:À|A)\\s*\\d{1,2}\\s*H";
+        // Extract the duration prefix if present
+        String durationPrefixPattern = "(\\d+\\s*MIN)(?:\\s*-\\s*)?";
+        Pattern durationPattern = Pattern.compile(durationPrefixPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+
+        String extractedDurationPrefix = "";
+        Matcher durationMatcher = durationPattern.matcher(description);
+        if (durationMatcher.find()) {
+            extractedDurationPrefix = durationMatcher.group(1);
+            description = description.substring(durationMatcher.end()).trim();  // Remove the duration prefix from the description
+        }
+
+        description = description.replaceAll("(\\s)?-(\\s)?", " ");
+
+        String timeRangePattern = "\\d{1,2}\\s*H\\s*(?:\\d{1,2})?\\s*(?:À|A)\\s*\\d{1,2}\\s*H\\s*(?:\\d{1,2})?";
         String dayPattern = "(?:(?:" + GlobalConfigs.WEEKLY_DAYS_PATTERN + ")\\s*)+";
 
         String timeDayPattern = "^(" + timeRangePattern + ")\\s*(" + dayPattern + ")";
@@ -219,40 +232,44 @@ public class RoadSignDescCleaner {
             Matcher dayTimeMatcher = Pattern.compile(dayTimePattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(description);
 
             if (timeDayMatcher.find()) {
-                String timeRange = timeDayMatcher.group(1)
-                        .replaceAll("\\s+", "")
-                        .replaceAll("A|À", "-");
-                String[] days = timeDayMatcher.group(2).split("\\s+");
-                for (String day : days) {
-                    if (reformattedIntervals.length() > 0)
-                        reformattedIntervals.append(isParkingAuthorized ? "; " : "; \\P ");
-                    else
-                        reformattedIntervals.append(isParkingAuthorized ? "" : "\\P ");
-                    reformattedIntervals.append(timeRange).append(" ").append(day);
-                }
-                // Remove the matched portion from the description
+                processMatchedInterval(reformattedIntervals, isParkingAuthorized, timeDayMatcher.group(1), timeDayMatcher.group(2));
                 description = description.substring(timeDayMatcher.end()).trim();
-
             } else if (dayTimeMatcher.find()) {
-                String[] days = dayTimeMatcher.group(1).split("\\s+");
-                String timeRange = dayTimeMatcher.group(2)
-                        .replaceAll("\\s+", "")
-                        .replaceAll("A|À", "-");
-                for (String day : days) {
-                    if (reformattedIntervals.length() > 0)
-                        reformattedIntervals.append(isParkingAuthorized ? "; " : "; \\P ");
-                    else
-                        reformattedIntervals.append(isParkingAuthorized ? "" : "\\P ");
-                    reformattedIntervals.append(timeRange).append(" ").append(day);
-                }
-                // Remove the matched portion from the description
+                processMatchedInterval(reformattedIntervals, isParkingAuthorized, dayTimeMatcher.group(2), dayTimeMatcher.group(1));
                 description = description.substring(dayTimeMatcher.end()).trim();
-
             } else { // No more patterns matched, exit loop
                 break;
             }
         }
-        return reformattedIntervals.toString().isEmpty() ? description : reformattedIntervals.toString();
+
+        String finalDescription = reformattedIntervals.toString().trim();
+        // Apply the duration prefix to each interval if it was extracted
+        if (!extractedDurationPrefix.isEmpty()) {
+            StringBuilder updatedDescription = new StringBuilder();
+            for (String segment : finalDescription.split("; ")) {
+                if (segment.startsWith("\\P"))
+                    updatedDescription.append(segment.replace("\\P", "\\P " + extractedDurationPrefix)).append("; ");
+                else
+                    updatedDescription.append(extractedDurationPrefix + " ").append(segment).append("; ");
+            }
+            finalDescription = updatedDescription.toString().trim();
+            if (finalDescription.endsWith(";"))
+                finalDescription = finalDescription.substring(0, finalDescription.length() - 1);
+        }
+
+        return finalDescription.isEmpty() ? description : finalDescription;
+    }
+
+    private static void processMatchedInterval(StringBuilder reformattedIntervals, boolean isParkingAuthorized, String timeRange, String dayString) {
+        timeRange = timeRange.replaceAll("\\s+", "").replaceAll("A|À", "-");
+        String[] days = dayString.split("\\s+");
+        for (String day : days) {
+            if (!reformattedIntervals.isEmpty())
+                reformattedIntervals.append(isParkingAuthorized ? "; " : "; \\P ");
+            else
+                reformattedIntervals.append(isParkingAuthorized ? "" : "\\P ");
+            reformattedIntervals.append(timeRange).append(" ").append(day);
+        }
     }
 
 
