@@ -67,8 +67,11 @@ public class Main {
                         new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_weeklyDayRange.txt")));
                 BufferedWriter writer_months =
                         new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_annualMonthRange.txt")));
-                BufferedWriter writer_additionalMetaData =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo.txt")));*/
+                 */
+                BufferedWriter writer_additionalMetaData_1 =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo_1.txt")));
+                BufferedWriter writer_additionalMetaData_2 =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo_2.txt")));
         ) {
             for (RoadSign s : roadSigns.values()) {
                 RpaSign rpaSign = s.getRpaSign();
@@ -76,11 +79,12 @@ public class Main {
                 String sDescription = rpaSign.getStringDescription();
                 writer_sDescription.write(sDescription + "\n");
 
-                String cleanedDescription = RoadSignDescCleaner.cleanDescription(sDescription);
+                String cleanedDescription = RoadSignDescCleaner.cleanDescription(sDescription, rpaSign.getCode());
                 writer_cleanedDescription.write(cleanedDescription + "\n");
 
-                /*RpaSignDescParser rpaSignDes = new RpaSignDescParser(cleanedDescription);
+                RpaSignDescParser rpaSignDes = new RpaSignDescParser(cleanedDescription);
 
+                /*
                 writer.write(sDescription + "\n\t==> ");
                 writer.write(rpaSignDes + "\n");
 
@@ -103,20 +107,24 @@ public class Main {
                     writer_months.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
                     writer_months.write(rpaSignDes.getAnnualMonthRange() + "\n");
                 }
+                 */
+
                 if (rpaSignDes.getAdditionalInfo() != null && !rpaSignDes.getAdditionalInfo().isEmpty()) {
-                    writer_additionalMetaData.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
-                    writer_additionalMetaData.write(rpaSignDes.getAdditionalInfo() + "\n");
-                }*/
+                    writer_additionalMetaData_1.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t'" + rpaSignDes.getAdditionalInfo() + "'\n");
+                    // writer_additionalMetaData_1.write("(" + s.getRpaSign().getStringCode() + ")\t'" + rpaSignDes.getAdditionalInfo() + "'\n");
+                    writer_additionalMetaData_2.write(rpaSignDes.getAdditionalInfo() + "\n");
+                }
             }
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }
-        /*// Define script path and arguments
+        // Define script path and arguments
         String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
-        String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc_*.txt";
+        // String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc_*.txt";
+        String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc_additionalInfo*.txt";
 
         // Execute the script with arguments
-        executeScript(scriptPath, targetFiles);*/
+        executeScript(scriptPath, targetFiles);
     }
 
     private static String formatLineRpaSign(String lineOfRpaSign) {
@@ -230,9 +238,9 @@ public class Main {
         SortedMap<Long, RoadSign> roadSigns = prepareRoadSignData();
 
         debugRpaSignDescription(roadSigns);
-        //debugRoadSign_to_file(roadSigns);
-        debugRoadSign_to_stdout(roadSigns);
-        //checkPattern();
+        // debugRoadSign_to_file(roadSigns);
+        // debugRoadSign_to_stdout(roadSigns);
+        // checkPattern();
     }
 
 }
