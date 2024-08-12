@@ -270,7 +270,7 @@ public class RoadSignDescCleaner {
 
         String dayMonthPattern = GlobalConfigs.TWO_DIGIT + "\\s*(?:" + GlobalConfigs.ANNUAL_MONTH_PATTERN + ")";
         String monthDayPattern = "(?:" + GlobalConfigs.ANNUAL_MONTH_PATTERN + ")\\s*" + GlobalConfigs.TWO_DIGIT;
-        String monthIntervalPattern = "(" + dayMonthPattern + "\\s*(?:AU?)\\s*" + dayMonthPattern + ")|(?:" + monthDayPattern + "\\s*(?:AU?)\\s*" + monthDayPattern + ")";
+        String monthIntervalPattern = "((?:" + dayMonthPattern + "\\s*(?:AU?)\\s*" + dayMonthPattern + ")|(?:" + monthDayPattern + "\\s*(?:AU?)\\s*" + monthDayPattern + "))";
 
         String sPattern = "(?:\\\\P)?\\s*" + timeIntervalPattern + "\\s*" + dayIntervalPattern + "\\s*" + monthIntervalPattern;
         Pattern pattern = Pattern.compile(sPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
@@ -347,18 +347,30 @@ public class RoadSignDescCleaner {
         String timeRangePattern = "\\d{1,2}\\s*H\\s*(?:\\d{1,2})?\\s*(?:À|A)\\s*\\d{1,2}\\s*H\\s*(?:\\d{1,2})?";
         String dayPattern = "(?:(?:" + GlobalConfigs.WEEKLY_DAYS_PATTERN + ")\\s*)+";
 
-        String timeDayPattern = "^(" + timeRangePattern + ")\\s*(" + dayPattern + ")\\s*-?\\s*";
-        String dayTimePattern = "^(" + dayPattern + ")\\s*(" + timeRangePattern + ")\\s*-?\\s*";
+
+        String dayMonthPattern = GlobalConfigs.TWO_DIGIT + "\\s*(?:" + GlobalConfigs.ANNUAL_MONTH_PATTERN + ")";
+        String monthDayPattern = "(?:" + GlobalConfigs.ANNUAL_MONTH_PATTERN + ")\\s*" + GlobalConfigs.TWO_DIGIT;
+        String monthIntervalPattern = "((?:" + dayMonthPattern + "\\s*(?:AU?)\\s*" + dayMonthPattern + ")|(?:" + monthDayPattern + "\\s*(?:AU?)\\s*" + monthDayPattern + "))";
+
+
+        String timeDayPattern = "^(" + timeRangePattern + ")\\s*(" + dayPattern + ")\\s*(?:-|" + monthIntervalPattern + ")?\\s*";
+        String dayTimePattern = "^(" + dayPattern + ")\\s*(" + timeRangePattern + ")\\s*(?:-|" + monthIntervalPattern + ")?\\s*";
 
         while (!descCopy.isEmpty()) {
             Matcher timeDayMatcher = Pattern.compile(timeDayPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
             Matcher dayTimeMatcher = Pattern.compile(dayTimePattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
 
             if (timeDayMatcher.find()) {
-                processMatchedInterval(reformattedIntervals, isParkingAuthorized, timeDayMatcher.group(1), timeDayMatcher.group(2));
+                String monthInterval = null;
+                if (timeDayMatcher.group(3) != null)
+                    monthInterval = timeDayMatcher.group(3);
+                processMatchedInterval(reformattedIntervals, isParkingAuthorized, timeDayMatcher.group(1), timeDayMatcher.group(2), monthInterval);
                 descCopy = descCopy.substring(timeDayMatcher.end()).trim();
             } else if (dayTimeMatcher.find()) {
-                processMatchedInterval(reformattedIntervals, isParkingAuthorized, dayTimeMatcher.group(2), dayTimeMatcher.group(1));
+                String monthInterval = null;
+                if (dayTimeMatcher.group(3) != null)
+                    monthInterval = dayTimeMatcher.group(3);
+                processMatchedInterval(reformattedIntervals, isParkingAuthorized, dayTimeMatcher.group(2), dayTimeMatcher.group(1), monthInterval);
                 descCopy = descCopy.substring(dayTimeMatcher.end()).trim();
             } else { // No more patterns matched, exit loop
                 break;
@@ -383,7 +395,8 @@ public class RoadSignDescCleaner {
         return finalDescription.isEmpty() ? description : finalDescription;
     }
 
-    private static void processMatchedInterval(StringBuilder reformattedIntervals, boolean isParkingAuthorized, String timeRange, String dayString) {
+    private static void processMatchedInterval(StringBuilder reformattedIntervals, boolean isParkingAuthorized,
+                                               String timeRange, String dayString, String monthInterval) {
         timeRange = timeRange.replaceAll("\\s+", "").replaceAll("A|À", "-");
         String[] days = dayString.split("\\s+");
         for (String day : days) {
@@ -391,7 +404,11 @@ public class RoadSignDescCleaner {
                 reformattedIntervals.append(isParkingAuthorized ? "; " : "; \\P ");
             else
                 reformattedIntervals.append(isParkingAuthorized ? "" : "\\P ");
-            reformattedIntervals.append(timeRange).append(" ").append(day);
+
+            reformattedIntervals
+                    .append(timeRange)
+                    .append(" ").append(day)
+                    .append(monthInterval != null ? " " + monthInterval : "");
         }
     }
 

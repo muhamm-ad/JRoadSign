@@ -140,6 +140,10 @@ public class RoadSignDescCleanerTest extends TestCase {
 
         assertEquals("\\P 06h30-07h30 LUN JEU 1 MARS AU 1 DEC.",
                 method.invoke(null, "\\P 06h30-07h30 LUN JEU 1 MARS AU 1 DEC."));
+
+        assertEquals("9H-17H MAR 15 NOV AU 15 MARS; 9H-17H JEU 15 NOV AU 15 MARS; 11H-12H JEU 15 MARS AU 15 NOV",
+                method.invoke(null, "9H À 17H MAR JEU 15 NOV AU 15 MARS - 11H À 12H JEU 15 MARS AU 15 NOV"));
+
     }
 
     public void testInsertSpaceBetweenLetterAndNumber() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
