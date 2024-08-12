@@ -33,7 +33,7 @@ public class GlobalConfigs {
 
     /******************************************** WeeklyDays *******************************************
      /* Define a regex pattern to capture a {@link WeeklyDays}
-     /* This will match patterns like "LUN AU VEN", "MAR A JEU", "DIM - SAM", etc
+     /* This will match patterns like "LUN AU VEN", "MER A JEU", "DIM - SAM", etc
      /**************************************************************************************************/
     public static final String ALL_TIME_PATTERN = "\\bEN\\s+TOUT\\s+TEMPS\\b";
     public static final String ALL_TIMES = "EN_TOUT_TEMPS";
@@ -142,9 +142,9 @@ public class GlobalConfigs {
     public static final String ANNUAL_MONTH_RANGE_PATTERN_SECOND =
             "(" + ANNUAL_MONTH_PATTERN + ")\\s*(" + TWO_DIGIT + ")?" + RANGE_DELIMITER_PATTERN
                     + "(" + ANNUAL_MONTH_PATTERN + ")\\s*(" + TWO_DIGIT + ")?";
+
     public static final String ANNUAL_MONTH_RANGE_PATTERN =
             "(" + ANNUAL_MONTH_RANGE_PATTERN_FIRST + "|" + ANNUAL_MONTH_RANGE_PATTERN_SECOND + ")";
-
 
     // Pattern for matching a date range in the format: DAY L_MONTH - DAY L_MONTH
     public static final String ANNUAL_MONTH_RANGE_LITERAL_PATTERN_FIRST =
