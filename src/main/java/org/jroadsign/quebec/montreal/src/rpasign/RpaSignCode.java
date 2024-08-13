@@ -1195,7 +1195,7 @@ public enum RpaSignCode {
         return NULL;  // Return NULL if no match is found
     }
 
-    public String getCode() {
+    public String getStr() {
         return code;
     }
 }

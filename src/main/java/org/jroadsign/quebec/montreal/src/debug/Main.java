@@ -3,16 +3,13 @@ package org.jroadsign.quebec.montreal.src.debug;
 import org.jroadsign.quebec.montreal.src.MontrealRoadPostSignsGeojsonReader;
 import org.jroadsign.quebec.montreal.src.RoadSign;
 import org.jroadsign.quebec.montreal.src.rpasign.RpaSign;
-import org.jroadsign.quebec.montreal.src.rpasign.description.RoadSignDescCleaner;
-import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescParser;
-import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
+import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDescRule;
 
 import java.io.*;
-import java.util.*;
-import java.util.function.Function;
+import java.util.List;
+import java.util.Scanner;
+import java.util.SortedMap;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -25,7 +22,6 @@ public class Main {
         MontrealRoadPostSignsGeojsonReader montrealRoadPostSignsGeojsonReader =
                 new MontrealRoadPostSignsGeojsonReader(FILTERED_FILE);
         SortedMap<Long, RoadSign> roadSigns = montrealRoadPostSignsGeojsonReader.getSigns();
-        LOGGER.info("Number of road signs: " + roadSigns.size());
         return roadSigns;
     }
 
@@ -48,71 +44,81 @@ public class Main {
         }
     }
 
-    public static void debugRpaSignDescription(SortedMap<Long, RoadSign> roadSigns) {
-        // Create a map of writers and their corresponding getters from RpaSignDescParser
-        Map<BufferedWriter, Function<RpaSignDescParser, String>> writersWithGetters = new HashMap<>();
+    public static void debugRpaSignRules(SortedMap<Long, RoadSign> roadSigns) {
         try (
-                BufferedWriter writer_sDescription =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "sDescription.txt")));
-                BufferedWriter writer_cleanedDescription =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "cleanedDescription.txt")));
+                BufferedWriter writer_strDescription =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "strDescription.txt")));
+                BufferedWriter writer_strDescriptionCleaned =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "strDescriptionCleaned.txt")));
 
-                /*BufferedWriter writer =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc.txt")));
-                BufferedWriter writer_durationInMinutes =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_durationMinutes.txt")));
-                BufferedWriter writer_dayHours =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_dailyTimeRange.txt")));
-                BufferedWriter writer_weekdays =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_weeklyDayRange.txt")));
-                BufferedWriter writer_months =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_annualMonthRange.txt")));
-                 */
-                BufferedWriter writer_additionalMetaData_1 =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo_1.txt")));
-                BufferedWriter writer_additionalMetaData_2 =
-                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignDesc_additionalInfo_2.txt")));
+                BufferedWriter writer_durationMinutes =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignRule_durationMinutes.txt")));
+                BufferedWriter writer_dailyTimeRanges =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignRule_dailyTimeRanges.txt")));
+                BufferedWriter writer_weeklyDays =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignRule_weeklyDays.txt")));
+                BufferedWriter writer_annualMonthRanges =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignRule_annualMonthRanges.txt")));
+                BufferedWriter writer_additionalInfos_1 =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignRule_additionalInfos_1.txt")));
+                BufferedWriter writer_additionalInfos_2 =
+                        new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSignRule_additionalInfos_2.txt")));
         ) {
             for (RoadSign s : roadSigns.values()) {
                 RpaSign rpaSign = s.getRpaSign();
+                String rpaCode = s.getRpaSign().getCode().getStr();
 
-                String sDescription = rpaSign.getStringDescription();
-                writer_sDescription.write(sDescription + "\n");
+                String strDescription = rpaSign.getDescription().getStrDescription();
+                writer_strDescription.write(rpaCode + "\t==>\t");
+                writer_strDescription.write(strDescription + "\n");
 
-                String cleanedDescription = RoadSignDescCleaner.cleanDescription(sDescription, rpaSign.getCode());
-                writer_cleanedDescription.write(cleanedDescription + "\n");
+                String strDescriptionCleaned = rpaSign.getDescription().getStrDescriptionCleaned();
+                writer_strDescriptionCleaned.write(rpaCode + "\t==>\t");
+                writer_strDescriptionCleaned.write(strDescriptionCleaned + "\n");
 
-                RpaSignDescParser rpaSignDes = new RpaSignDescParser(cleanedDescription);
+                StringBuilder additionalInfos = new StringBuilder();
+                StringBuilder durationMinutes = new StringBuilder();
+                StringBuilder dailyTimeRanges = new StringBuilder();
+                StringBuilder weeklyDays = new StringBuilder();
+                StringBuilder annualMonthRanges = new StringBuilder();
 
-                /*
-                writer.write(sDescription + "\n\t==> ");
-                writer.write(rpaSignDes + "\n");
+                for (RpaSignDescRule rule : rpaSign.getDescription().getRpaSignDescRules()) {
+                    durationMinutes.append(
+                            rule.getListDurationMinutes() == null || rule.getListDurationMinutes().isEmpty() ?
+                                    "" : rule.getListDurationMinutes() + ";");
+                    dailyTimeRanges.append(
+                            rule.getListDailyTimeRange() == null || rule.getListDailyTimeRange().isEmpty() ?
+                                    "" : rule.getListDailyTimeRange() + ";");
+                    weeklyDays.append(
+                            rule.getWeeklyDays() == null || rule.getWeeklyDays().isEmpty() ?
+                                    "" : rule.getWeeklyDays() + ";");
+                    annualMonthRanges.append(
+                            rule.getListAnnualMonthRange() == null || rule.getListAnnualMonthRange().isEmpty() ?
+                                    "" : rule.getListAnnualMonthRange() + ";");
 
-                if (rpaSignDes.getDurationMinutes() != null && !rpaSignDes.getDurationMinutes().isEmpty()) {
-                    writer_durationInMinutes.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
-                    writer_durationInMinutes.write(rpaSignDes.getDurationMinutes() + "\n");
+                    additionalInfos.append(rule.getAdditionalMetaData() == null ? "" : rule.getAdditionalMetaData() + ";");
                 }
-                if (rpaSignDes.getDailyTimeRange() != null && !rpaSignDes.getDailyTimeRange().isEmpty()
-                        && rpaSignDes.getDailyTimeRange().contains(";")) {
-                    writer_dayHours.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
-                    writer_dayHours.write(rpaSignDes.getDailyTimeRange() + "\n");
-                }
-                if (rpaSignDes.getWeeklyDayRange() != null && !rpaSignDes.getWeeklyDayRange().isEmpty() &&
-                        rpaSignDes.getWeeklyDayRange().contains(";")) {
-                    writer_weekdays.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
-                    writer_weekdays.write(rpaSignDes.getWeeklyDayRange() + "\n");
-                }
-                if (rpaSignDes.getAnnualMonthRange() != null && !rpaSignDes.getAnnualMonthRange().isEmpty() &&
-                        rpaSignDes.getAnnualMonthRange().contains(";")) {
-                    writer_months.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t");
-                    writer_months.write(rpaSignDes.getAnnualMonthRange() + "\n");
-                }
-                 */
 
-                if (rpaSignDes.getAdditionalInfo() != null && !rpaSignDes.getAdditionalInfo().isEmpty()) {
-                    writer_additionalMetaData_1.write("(" + s.getRpaSign().getStringCode() + ")\t'" + sDescription + "'\t==>\t'" + rpaSignDes.getAdditionalInfo() + "'\n");
-                    // writer_additionalMetaData_1.write("(" + s.getRpaSign().getStringCode() + ")\t'" + rpaSignDes.getAdditionalInfo() + "'\n");
-                    writer_additionalMetaData_2.write(rpaSignDes.getAdditionalInfo() + "\n");
+                if (!durationMinutes.isEmpty() && durationMinutes.toString().split(";").length > 1) {
+                    writer_durationMinutes.write(rpaCode + "\t==>\t");
+                    writer_durationMinutes.write(durationMinutes + "\n");
+                }
+                if (!dailyTimeRanges.isEmpty() && dailyTimeRanges.toString().split(";").length > 1) {
+                    writer_dailyTimeRanges.write(rpaCode + "\t==>\t");
+                    writer_dailyTimeRanges.write(dailyTimeRanges + "\n");
+                }
+                if (!weeklyDays.isEmpty() && weeklyDays.toString().split(";").length > 1) {
+                    writer_weeklyDays.write(rpaCode + "\t==>\t");
+                    writer_weeklyDays.write(weeklyDays + "\n");
+                }
+                if (!annualMonthRanges.isEmpty() && annualMonthRanges.toString().split(";").length > 1) {
+                    writer_annualMonthRanges.write(rpaCode + "\t==>\t");
+                    writer_annualMonthRanges.write(annualMonthRanges + "\n");
+                }
+                if (!additionalInfos.isEmpty()) {
+                    // writer_additionalInfos_1.write(rpaCode + "\t==>\t");
+                    writer_additionalInfos_1.write(additionalInfos + "\n");
+                    writer_additionalInfos_2.write(rpaCode + "\t'" + strDescription + "'\t==>\t'" + additionalInfos + "'\n");
                 }
             }
         } catch (IOException e) {
@@ -120,11 +126,12 @@ public class Main {
         }
         // Define script path and arguments
         String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
-        // String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc_*.txt";
-        String targetFiles = "src/main/resources/quebec/montreal/output/RpaSignDesc_additionalInfo*.txt";
+        String targetFiles_RpaSignRules = "src/main/resources/quebec/montreal/output/RpaSignRule_*.txt";
+        String targetFiles_strDescriptions = "src/main/resources/quebec/montreal/output/strDescription*.txt";
 
         // Execute the script with arguments
-        executeScript(scriptPath, targetFiles);
+        executeScript(scriptPath, targetFiles_RpaSignRules);
+        executeScript(scriptPath, targetFiles_strDescriptions);
     }
 
     private static String formatLineRpaSign(String lineOfRpaSign) {
@@ -142,7 +149,7 @@ public class Main {
                 .replaceAll("(?<!list)DurationMinutes", "\n\t\t\t\t\t\tDurationMinutes")
                 .replace("listDailyTimeRange", "\n\t\t\t\tlistDailyTimeRange")
                 .replaceAll("(?<!list)DailyTimeRange", "\n\t\t\t\t\t\tDailyTimeRange")
-                .replace("weeklyDays", "\n\t\t\t\tweeklyDays")
+                .replace("weeklyDayss", "\n\t\t\t\tweeklyDayss")
                 .replace("listAnnualMonthRange", "\n\t\t\t\tlistAnnualMonthRange")
                 .replaceAll("(?<!list)AnnualMonthRange", "\n\t\t\t\t\t\tAnnualMonthRange")
                 .replace("additionalMetaData", "\n\t\t\t\tadditionalMetaData")
@@ -157,24 +164,24 @@ public class Main {
                 .replace("'null'", "null");
     }
 
-    private static void debugRoadSign_to_file(SortedMap<Long, RoadSign> roadSigns) {
+    private static void debugRpaSign_file(SortedMap<Long, RoadSign> roadSigns) {
         try (
-                BufferedWriter writerRoadSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RoadSigns.txt")));
+                // BufferedWriter writerRoadSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RoadSigns.txt")));
                 BufferedWriter writerRpaSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSigns.txt")));
         ) {
             for (RoadSign s : roadSigns.values()) {
-                if (s.getRpaSign().getStringCode().equalsIgnoreCase("SV-QA")) {
-                    writerRoadSigns.write(s + "\n");
-                    RpaSign rpaSign = s.getRpaSign();
-                    writerRpaSigns.write(formatLineRpaSign(rpaSign.toString()) + "\n");
-                }
+                // if (s.getRpaSign().getStringCode().equalsIgnoreCase("SV-QA")) { // Filter
+                // writerRoadSigns.write(s + "\n");
+                RpaSign rpaSign = s.getRpaSign();
+                writerRpaSigns.write(formatLineRpaSign(rpaSign.toString()) + "\n");
+                // }
             }
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }
     }
 
-    private static void debugRoadSign_to_stdout(SortedMap<Long, RoadSign> roadSigns) {
+    private static void debugRpaSign_stdout(SortedMap<Long, RoadSign> roadSigns) {
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
@@ -186,7 +193,7 @@ public class Main {
             }
 
             List<RoadSign> matchingRoadSigns = roadSigns.values().stream()
-                    .filter(s -> s.getRpaSign().getStringCode().equalsIgnoreCase(searchCode))
+                    .filter(s -> s.getRpaSign().getCode().getStr().equalsIgnoreCase(searchCode))
                     .collect(Collectors.toList());
 
             if (matchingRoadSigns.isEmpty()) {
@@ -200,47 +207,17 @@ public class Main {
         }
     }
 
-    public static void checkPattern() {
-        final String WEEKLY_DAYS_EXPRESSION_PATTERN =
-                GlobalConfigs.ALL_TIME_EXCEPT_PATTERN + "\\s+" +
-                        String.format(GlobalConfigs.DAY_TIME_RANGE_PATTERN, "\\s*", "\\s*(AU?|-)\\s*") + "\\s+" +
-                        GlobalConfigs.WEEKLY_DAYS_RANGE_PATTERN;
-        System.out.println("Pattern : \"" + WEEKLY_DAYS_EXPRESSION_PATTERN + "\"");
-
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.print("Enter a string to compare to the pattern (or type 'exit' to quit): ");
-            String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("exit")) {
-                break;
-            }
-
-            Pattern pattern = Pattern.compile("\\b(" + WEEKLY_DAYS_EXPRESSION_PATTERN + ")\\b",
-                    Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-            Matcher matcher = pattern.matcher(input);
-
-            if (matcher.matches()) {
-                System.out.println("Yes, matched");
-            } else {
-                System.out.println("Not matched");
-            }
-        }
-        scanner.close();
-    }
-
     public static void main(String[] args) {
-        // This main method is for debugging purposes.
-        /*if (!OUTPUT_DIR.exists()) {
+        if (!OUTPUT_DIR.exists()) {
             OUTPUT_DIR.mkdir();
-        }*/
+        }
 
         SortedMap<Long, RoadSign> roadSigns = prepareRoadSignData();
 
-        debugRpaSignDescription(roadSigns);
-        // debugRoadSign_to_file(roadSigns);
-        // debugRoadSign_to_stdout(roadSigns);
-        // checkPattern();
+        debugRpaSignRules(roadSigns);
+        debugRpaSign_file(roadSigns);
+
+        // debugRpaSign_stdout(roadSigns);
     }
 
 }

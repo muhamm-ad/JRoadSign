@@ -1,5 +1,6 @@
 package org.jroadsign.quebec.montreal.src.rpasign;
 
+import org.jroadsign.quebec.montreal.src.rpasign.description.RoadSignDescCleaner;
 import org.jroadsign.quebec.montreal.src.rpasign.description.RpaSignDesc;
 
 /**
@@ -20,7 +21,9 @@ public class RpaSign {
     public RpaSign(long id, String sDescription, String sCode) {
         this.id = id;
         this.code = RpaSignCode.fromString(sCode);
-        this.description = new RpaSignDesc(sDescription, this.code);
+
+        String sDescriptionCleaned = RoadSignDescCleaner.cleanDescription(sDescription, code);
+        this.description = new RpaSignDesc(sDescriptionCleaned, sDescription);
     }
 
     public long getId() {
@@ -31,16 +34,8 @@ public class RpaSign {
         return description;
     }
 
-    public String getStringDescription() {
-        return description.getStrDescription();
-    }
-
     public RpaSignCode getCode() {
         return code;
-    }
-
-    public String getStringCode() {
-        return code.getCode();
     }
 
     @Override
@@ -48,7 +43,7 @@ public class RpaSign {
         return "RpaSign{" +
                 "id=" + id +
                 ", description=" + description +
-                ", code='" + code.getCode() + '\'' +
+                ", code='" + code.getStr() + '\'' +
                 '}';
     }
 }

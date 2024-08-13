@@ -57,7 +57,8 @@ public class MontrealRoadPostSignsGeojsonReader {
 
                 getGeoJsonProperties(properties);
             }
-
+            LOGGER.info("\tNumber of road signs: " + signs.size());
+            LOGGER.info("\tNumber of road posts: " + posts.size());
             LOGGER.info(() -> "Finished reading the GeoJSON file: " + geoJsonFile);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE,
