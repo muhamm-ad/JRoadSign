@@ -55,7 +55,7 @@ public class RpaSignDescRule {
             listDurationMinutes = new ArrayList<>();
             String[] tabDurationsMinutes = rpaSignDescParser.getDurationMinutes().split(";");
             for (String element : tabDurationsMinutes)
-                listDurationMinutes.add(new DurationMinutes(element));
+                listDurationMinutes.add(new DurationMinutes(element.trim()));
         }
     }
 

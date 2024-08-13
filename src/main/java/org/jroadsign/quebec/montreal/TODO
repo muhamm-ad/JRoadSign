@@ -1,4 +1,0 @@
-- [ ] Add docstrings to all RpaSign classes for better code comprehension and maintainability.
-
-- [X] Add a variable into the RpaDescRule class for managing whether it's either a Parking or Non-Parking scenario.
-

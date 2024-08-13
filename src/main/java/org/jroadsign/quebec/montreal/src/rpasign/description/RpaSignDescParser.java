@@ -174,7 +174,8 @@ public class RpaSignDescParser {
                 .replaceAll("A", "-")
                 .replaceAll("\\s+", "")
                 .replaceAll("24H(\\d{1,2})", "00H$1")
-                .replaceAll("24H", "23H59")
+                .replaceAll("\\b24H\\b", "00H")
+                .replaceAll("\\b-00?H(00)?\\b", "-23H59")
                 .trim();
     }
 

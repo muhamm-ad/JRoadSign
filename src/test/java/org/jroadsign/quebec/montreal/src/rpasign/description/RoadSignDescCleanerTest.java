@@ -5,6 +5,8 @@ import junit.framework.TestCase;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import static org.jroadsign.quebec.montreal.src.rpasign.description.RoadSignDescCleaner.RULE_SEPARATOR;
+
 public class RoadSignDescCleanerTest extends TestCase {
 
     public void testCleanDescription() {
@@ -17,49 +19,49 @@ public class RoadSignDescCleanerTest extends TestCase {
         method.setAccessible(true);
 
         // General patterns with parking prefix and duration prefix
-        assertEquals("\\P 17H-23H59 MAR; \\P 00H00-17H MER",
+        assertEquals("\\P 17H-23H59 MAR" + RULE_SEPARATOR + "\\P 00H00-17H MER",
                 method.invoke(null, "\\P 17H MAR A 17H MER"));
-        assertEquals("120MIN 17H-23H59 MAR; 120MIN 00H00-17H MER",
+        assertEquals("120MIN 17H-23H59 MAR" + RULE_SEPARATOR + "120MIN 00H00-17H MER",
                 method.invoke(null, "120MIN - 17H MAR A 17H MER"));
-        assertEquals("\\P 120MIN 17H-23H59 MAR; \\P 120MIN 00H00-17H MER",
+        assertEquals("\\P 120MIN 17H-23H59 MAR" + RULE_SEPARATOR + "\\P 120MIN 00H00-17H MER",
                 method.invoke(null, "\\P 120MIN - 17H MAR A 17H MER"));
 
         // Full day intervals
-        assertEquals("00H-23H59 LUN; 00H00-23H59 MAR; 00H00-23H59 MER",
+        assertEquals("00H-23H59 LUN" + RULE_SEPARATOR + "00H00-23H59 MAR" + RULE_SEPARATOR + "00H00-23H59 MER",
                 method.invoke(null, "00H LUN A 23H59 MER"));
-        assertEquals("\\P 07H00-23H59 VEN; \\P 00H00-23H59 SAM; \\P 00H00-07H DIM",
+        assertEquals("\\P 07H00-23H59 VEN" + RULE_SEPARATOR + "\\P 00H00-23H59 SAM" + RULE_SEPARATOR + "\\P 00H00-07H DIM",
                 method.invoke(null, "\\P 07H00 VEN A 07H DIM"));
 
         // Multiple day intervals
-        assertEquals("17H-23H59 MAR; 00H00-17H MER; 17H-23H59 JEU; 00H00-17H VEN; 17H-23H59 SAM; 00H00-23H59 DIM; 00H00-17H LUN",
+        assertEquals("17H-23H59 MAR" + RULE_SEPARATOR + "00H00-17H MER" + RULE_SEPARATOR + "17H-23H59 JEU" + RULE_SEPARATOR + "00H00-17H VEN" + RULE_SEPARATOR + "17H-23H59 SAM" + RULE_SEPARATOR + "00H00-23H59 DIM" + RULE_SEPARATOR + "00H00-17H LUN",
                 method.invoke(null, "17H MAR A 17H MER - 17H JEU A 17H VEN - 17H SAM A 17H LUN"));
-        assertEquals("\\P 17H-23H59 LUN; \\P 00H00-17H MAR; \\P 17H-23H59 MER; \\P 00H00-17H JEU; \\P 17H-23H59 VEN; \\P 00H00-17H SAM",
+        assertEquals("\\P 17H-23H59 LUN" + RULE_SEPARATOR + "\\P 00H00-17H MAR" + RULE_SEPARATOR + "\\P 17H-23H59 MER" + RULE_SEPARATOR + "\\P 00H00-17H JEU" + RULE_SEPARATOR + "\\P 17H-23H59 VEN" + RULE_SEPARATOR + "\\P 00H00-17H SAM",
                 method.invoke(null, "\\P LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H"));
-        assertEquals("120MIN 17H-23H59 LUN; 120MIN 00H00-17H MAR; 120MIN 17H-23H59 MER; 120MIN 00H00-17H JEU; 120MIN 17H-23H59 VEN; 120MIN 00H00-17H SAM",
+        assertEquals("120MIN 17H-23H59 LUN" + RULE_SEPARATOR + "120MIN 00H00-17H MAR" + RULE_SEPARATOR + "120MIN 17H-23H59 MER" + RULE_SEPARATOR + "120MIN 00H00-17H JEU" + RULE_SEPARATOR + "120MIN 17H-23H59 VEN" + RULE_SEPARATOR + "120MIN 00H00-17H SAM",
                 method.invoke(null, "120MIN - LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H"));
 
         // Edge cases with short intervals and single day intervals
-        assertEquals("22H-23H59 VEN; 00H00-23H59 SAM; 00H00-06H DIM",
+        assertEquals("22H-23H59 VEN" + RULE_SEPARATOR + "00H00-23H59 SAM" + RULE_SEPARATOR + "00H00-06H DIM",
                 method.invoke(null, "22H VEN A 06H DIM"));
-        assertEquals("06H30-23H59 SAM; 00H00-23H59 DIM; 00H00-10H LUN",
+        assertEquals("06H30-23H59 SAM" + RULE_SEPARATOR + "00H00-23H59 DIM" + RULE_SEPARATOR + "00H00-10H LUN",
                 method.invoke(null, "06H30 SAM A 10H LUN"));
-        assertEquals("\\P 23H-23H59 LUN; \\P 00H00-23H59 MAR; \\P 00H00-23H59 MER; \\P 00H00-23H59 JEU; \\P 00H00-23H VEN",
+        assertEquals("\\P 23H-23H59 LUN" + RULE_SEPARATOR + "\\P 00H00-23H59 MAR" + RULE_SEPARATOR + "\\P 00H00-23H59 MER" + RULE_SEPARATOR + "\\P 00H00-23H59 JEU" + RULE_SEPARATOR + "\\P 00H00-23H VEN",
                 method.invoke(null, "\\P LUN 23H À VEN 23H"));
-        assertEquals("120MIN 12H-23H59 SAM; 120MIN 00H00-23H59 DIM; 120MIN 00H00-18H LUN",
+        assertEquals("120MIN 12H-23H59 SAM" + RULE_SEPARATOR + "120MIN 00H00-23H59 DIM" + RULE_SEPARATOR + "120MIN 00H00-18H LUN",
                 method.invoke(null, "120MIN - SAM 12H À LUN 18H"));
 
         // Covering cases with specific start and end times
-        assertEquals("17H-23H59 MAR; 00H00-17H MER",
+        assertEquals("17H-23H59 MAR" + RULE_SEPARATOR + "00H00-17H MER",
                 method.invoke(null, "17H MAR A 17H MER"));
-        assertEquals("\\P 15H-23H59 MAR; \\P 00H00-23H59 MER; \\P 00H00-19H JEU",
+        assertEquals("\\P 15H-23H59 MAR" + RULE_SEPARATOR + "\\P 00H00-23H59 MER" + RULE_SEPARATOR + "\\P 00H00-19H JEU",
                 method.invoke(null, "\\P 15H MAR A 19H JEU"));
-        assertEquals("08H24-23H59 SAM; 00H00-23H59 DIM; 00H00-09H00 LUN",
+        assertEquals("08H24-23H59 SAM" + RULE_SEPARATOR + "00H00-23H59 DIM" + RULE_SEPARATOR + "00H00-09H00 LUN",
                 method.invoke(null, "08H24 SAM A 09H00 LUN"));
 
         // Complex multi-day intervals with different start and end times
-        assertEquals("04H00-23H59 MER; 00H00-23H59 JEU; 00H00-12H VEN",
+        assertEquals("04H00-23H59 MER" + RULE_SEPARATOR + "00H00-23H59 JEU" + RULE_SEPARATOR + "00H00-12H VEN",
                 method.invoke(null, "MER 04H00 À VEN 12H"));
-        assertEquals("22H-23H59 VEN; 00H00-23H59 SAM; 00H00-06H DIM",
+        assertEquals("22H-23H59 VEN" + RULE_SEPARATOR + "00H00-23H59 SAM" + RULE_SEPARATOR + "00H00-06H DIM",
                 method.invoke(null, "VEN 22H À DIM 06H"));
     }
 
@@ -83,13 +85,13 @@ public class RoadSignDescCleanerTest extends TestCase {
         Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_2", String.class);
         method.setAccessible(true);
 
-        assertEquals("23H30-23H59 LUN 1 AVRIL AU 1 DEC; 00H00-23H59 MAR 1 AVRIL AU 1 DEC; 00H00-00H30 MER 1 AVRIL AU 1 DEC; 23H30-23H59 JEU 1 AVRIL AU 1 DEC; 00H00-00H30 VEN 1 AVRIL AU 1 DEC",
+        assertEquals("23H30-23H59 LUN 1 AVRIL AU 1 DEC" + RULE_SEPARATOR + "00H00-23H59 MAR 1 AVRIL AU 1 DEC" + RULE_SEPARATOR + "00H00-00H30 MER 1 AVRIL AU 1 DEC" + RULE_SEPARATOR + "23H30-23H59 JEU 1 AVRIL AU 1 DEC" + RULE_SEPARATOR + "00H00-00H30 VEN 1 AVRIL AU 1 DEC",
                 method.invoke(null, "23H30-00H30 LUN A MER; JEU A VEN  1 AVRIL AU 1 DEC"));
 
-        assertEquals("23H30-23H59 LUN 1 MARS AU 1 DEC; 00H00-00H30 MAR 1 MARS AU 1 DEC; 23H30-23H59 JEU 1 MARS AU 1 DEC; 00H00-00H30 VEN 1 MARS AU 1 DEC",
+        assertEquals("23H30-23H59 LUN 1 MARS AU 1 DEC" + RULE_SEPARATOR + "00H00-00H30 MAR 1 MARS AU 1 DEC" + RULE_SEPARATOR + "23H30-23H59 JEU 1 MARS AU 1 DEC" + RULE_SEPARATOR + "00H00-00H30 VEN 1 MARS AU 1 DEC",
                 method.invoke(null, "23H30-00H30 LUN A MAR; JEU A VEN  1 MARS AU 1 DEC"));
 
-        assertEquals("\\P 23H30-23H59 MAR 25 MARS AU 30 DEC; \\P 00H00-00H30 MER 25 MARS AU 30 DEC; \\P 23H30-23H59 VEN 25 MARS AU 30 DEC; \\P 00H00-00H30 SAM 25 MARS AU 30 DEC",
+        assertEquals("\\P 23H30-23H59 MAR 25 MARS AU 30 DEC" + RULE_SEPARATOR + "\\P 00H00-00H30 MER 25 MARS AU 30 DEC" + RULE_SEPARATOR + "\\P 23H30-23H59 VEN 25 MARS AU 30 DEC" + RULE_SEPARATOR + "\\P 00H00-00H30 SAM 25 MARS AU 30 DEC",
                 method.invoke(null, "\\P 23H30-00H30 MAR A MER; VEN A SAM 25 MARS AU 30 DEC"));
 
         assertEquals("8H À 12H LUN MER VEN 13H À 18H MAR JEU",
@@ -100,49 +102,35 @@ public class RoadSignDescCleanerTest extends TestCase {
         Method method = RoadSignDescCleaner.class.getDeclaredMethod("reformatDailyTimeIntervals_3", String.class);
         method.setAccessible(true);
 
-        assertEquals("8H-12H LUN; 8H-12H MER; 8H-12H VEN; 13H-18H MAR; 13H-18H JEU",
+        assertEquals("8H À 12H LUN MER VEN" + RULE_SEPARATOR + "13H À 18H MAR JEU",
                 method.invoke(null, "8H À 12H LUN MER VEN 13H À 18H MAR JEU"));
 
-        assertEquals("\\P 8H-12H LUN; \\P 8H-12H MER; \\P 8H-12H VEN; \\P 13H-18H MAR; \\P 13H-18H JEU",
+        assertEquals("MAR JEU 8H À 12H" + RULE_SEPARATOR + "LUN MER VEN 14H À 17H",
+                method.invoke(null, "MAR JEU 8H À 12H LUN MER VEN 14H À 17H"));
+
+        assertEquals("20MIN 8H À 12H LUN MER VEN" + RULE_SEPARATOR + "20MIN 13H À 18H MAR JEU",
+                method.invoke(null, "20MIN 8H À 12H LUN MER VEN 13H À 18H MAR JEU"));
+
+        assertEquals("40 MIN MAR JEU 8H À 12H" + RULE_SEPARATOR + "40 MIN LUN MER VEN 14H À 17H",
+                method.invoke(null, "40 MIN MAR JEU 8H À 12H LUN MER VEN 14H À 17H"));
+
+        assertEquals("\\P 8H À 12H LUN MER VEN" + RULE_SEPARATOR + "\\P 13H À 18H MAR JEU",
                 method.invoke(null, "\\P 8H À 12H LUN MER VEN 13H À 18H MAR JEU"));
 
-        assertEquals("7H-11H LUN; 7H-11H MER; 7H-11H VEN; 12H-15H MAR; 12H-15H JEU",
-                method.invoke(null, "7H À 11H LUN MER VEN 12H À 15H MAR JEU"));
+        assertEquals("\\P MAR JEU 8H À 12H" + RULE_SEPARATOR + "\\P LUN MER VEN 14H À 17H",
+                method.invoke(null, "\\P MAR JEU 8H À 12H LUN MER VEN 14H À 17H"));
 
-        assertEquals("8H-12H LUN; 8H-12H MER; 8H-12H VEN; 13H-17H MAR; 13H-17H JEU",
-                method.invoke(null, "LUN MER VEN 8H A 12H - MAR JEU 13H A 17H"));
+        assertEquals("\\P 120MIN 8H À 12H LUN MER VEN" + RULE_SEPARATOR + "\\P 120MIN 13H À 18H MAR JEU",
+                method.invoke(null, "\\P 120MIN 8H À 12H LUN MER VEN 13H À 18H MAR JEU"));
 
-        assertEquals("6H-10H LUN; 6H-10H MER; 12H-16H VEN; 12H-16H SAM",
-                method.invoke(null, "6H À 10H LUN MER 12H À 16H VEN SAM"));
+        assertEquals("\\P 60 MIN MAR JEU 8H À 12H" + RULE_SEPARATOR + "\\P 60 MIN LUN MER VEN 14H À 17H",
+                method.invoke(null, "\\P 60 MIN MAR JEU 8H À 12H LUN MER VEN 14H À 17H"));
 
-        // Test cases without duration prefix
-        assertEquals("9H-12H LUN; 9H-12H MAR; 14H-17H MER; 14H-17H JEU; 14H-17H VEN",
-                method.invoke(null, "LUN MAR 9H À 12H MER JEU VEN 14H À 17H"));
-
-        assertEquals("\\P 9H30-12H LUN; \\P 9H30-12H MAR; \\P 14H-17H MER; \\P 14H-17H JEU; \\P 14H-17H VEN",
-                method.invoke(null, "\\P LUN MAR 9H30 À 12H MER JEU VEN 14H À 17H"));
-
-        assertEquals("10H32-13H MAR; 10H32-13H JEU; 16H24-19H LUN; 16H24-19H MER; 16H24-19H VEN",
-                method.invoke(null, "MAR JEU 10H32 À 13H LUN MER VEN 16H24 À 19H"));
-
-        assertEquals("\\P 7H-11H LUN; \\P 7H-11H MAR; \\P 14H-18H MER; \\P 14H-18H JEU",
-                method.invoke(null, "\\P LUN MAR 7H À 11H MER JEU 14H À 18H"));
-
-        // Test cases with duration prefix
-        assertEquals("120MIN 9H-12H LUN; 120MIN 9H-12H MAR; 120MIN 14H-17H MER; 120MIN 14H-17H JEU; 120MIN 14H-17H VEN",
-                method.invoke(null, "120MIN - LUN MAR 9H À 12H MER JEU VEN 14H À 17H"));
-
-        assertEquals("\\P 90MIN 9H-12H LUN; \\P 90MIN 9H-12H MAR; \\P 90MIN 14H-17H MER; \\P 90MIN 14H-17H JEU; \\P 90MIN 14H-17H VEN",
-                method.invoke(null, "\\P 90MIN - LUN MAR 9H À 12H MER JEU VEN 14H À 17H"));
-
-        assertEquals("30MIN 9H-16H30 MAR; 30MIN 9H-16H30 MER; 30MIN 9H-16H30 VEN; 30MIN 12H-16H30 LUN; 30MIN 12H-16H30 JEU",
-                method.invoke(null, "30MIN - MAR MER VEN - 9H À 16H30 - LUN JEU - 12H À 16H30"));
+        assertEquals("30 MIN MAR MER VEN 9H À 16H30" + RULE_SEPARATOR + "30 MIN LUN JEU 12H À 16H30",
+                method.invoke(null, "30 MIN - MAR MER VEN - 9H À 16H30 - LUN JEU - 12H À 16H30"));
 
         assertEquals("\\P 06h30-07h30 LUN JEU 1 MARS AU 1 DEC.",
                 method.invoke(null, "\\P 06h30-07h30 LUN JEU 1 MARS AU 1 DEC."));
-
-        assertEquals("9H-17H MAR 15 NOV AU 15 MARS; 9H-17H JEU 15 NOV AU 15 MARS; 11H-12H JEU 15 MARS AU 15 NOV",
-                method.invoke(null, "9H À 17H MAR JEU 15 NOV AU 15 MARS - 11H À 12H JEU 15 MARS AU 15 NOV"));
 
     }
 

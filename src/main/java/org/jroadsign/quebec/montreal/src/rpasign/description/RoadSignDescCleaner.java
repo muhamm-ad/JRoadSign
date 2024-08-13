@@ -16,6 +16,8 @@ public class RoadSignDescCleaner {
     private RoadSignDescCleaner() {
     }
 
+    public static final String RULE_SEPARATOR = " & ";
+
     /**
      * This method Cleans up the given description by performing several operations on it.
      * It normalizes the string to upper case, removes possible prefixes, extra spaces, unwanted characters,
@@ -29,7 +31,7 @@ public class RoadSignDescCleaner {
         String cleanedDescription = strDescription.toUpperCase().trim();
         cleanedDescription = handleNoParking(removeUnnecessaryCharacters(cleanedDescription));
 
-        if (code.getCode().startsWith("S") && !cleanedDescription.startsWith("\\P")) {
+        if (code.getStr().startsWith("S") && !cleanedDescription.startsWith("\\P")) {
             cleanedDescription = "\\P " + cleanedDescription;
         }
 
@@ -38,9 +40,45 @@ public class RoadSignDescCleaner {
             cleanedDescription = cleanedDescription.replaceAll(entry.getKey(), abbreviation).trim();
         }
 
-        cleanedDescription = reformatDailyTimeIntervals(cleanedDescription);
         cleanedDescription = correctSpelling(cleanedDescription);
         cleanedDescription = insertSpacesWhereNeeded(cleanedDescription);
+
+        cleanedDescription = switch (code) {
+            case SLR_ST_75
+                // ex : "\P 9H À 17H LUN MER VEN 15 NOV AU 15 MARS; 11H À 12H MERCREDI 15 MARS AU 15 NOV"
+                    -> cleanedDescription.replace(";", RULE_SEPARATOR + "\\P");
+
+            case SLR_ST_82, SLR_ST_84, SLR_ST_98
+                // ex : "\P LUN MER VEN 8H À 12H - MAR JEU 13H À 17H"
+                // ex : "\P 9H À 17H MAR JEU 15 NOV AU 15 MARS - 11H À 12H JEUDI 15 MARS AU 15 NOV"
+                    -> cleanedDescription.replace(" -", RULE_SEPARATOR + "\\P");
+
+            case SS_JM
+                // ex : "\P 07h-16h LUN A VEN ET 07h-12h SAMEDI"
+                    -> cleanedDescription.replace("ET", RULE_SEPARATOR + "\\P");
+
+            case SD_OP
+                // ex : "\P 18h-24h LUN A VEN  +  08h-24h SAM ET DIM"
+                    -> cleanedDescription.replace("+", RULE_SEPARATOR + "\\P");
+
+            case SLR_ST_80, SLR_ST_81, SLR_ST_111, SLR_ST_172, SLR_ST_174, SLR_ST_175
+                // ex : "\P 17H MAR À 17H MER; 17H JEU À 17H VEN; 17H SAM À 17H LUN"
+                // ex : "\P 17H MAR À 17H MER; \P 17H JEU À 17H VEN; \P 17H SAM À 17H LUN"
+                // ex : "\P 120 MIN - LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H"
+                    -> reformatDailyTimeIntervals_1(cleanedDescription);
+            case SB_NX, SB_NX_A, SB_NY, SB_NY_A
+                // ex : "\P 23h30-00h30  MAR A MER, VEN A SAM  1 MARS AU 1 DEC. "
+                    -> reformatDailyTimeIntervals_2(cleanedDescription);
+
+            case SLR_ST_79, SLR_ST_105, SLR_ST_106, SLR_ST_107, SLR_ST_135
+                // ex : "\P 8H À 12H LUN MER VEN 13H À 18H MAR JEU"
+                // ex : "\P MAR JEU 8H À 12H LUN MER VEN 14H À 17H"
+                // ex : "\P 30 MIN - MAR MER VEN - 9H À 16H30 - LUN JEU - 12H À 16H30"
+                    -> reformatDailyTimeIntervals_3(cleanedDescription);
+
+            default -> cleanedDescription;
+        };
+
         return cleanedDescription.trim();
     }
 
@@ -60,6 +98,7 @@ public class RoadSignDescCleaner {
                 .replace("Ê", "E")
                 .replace("À", "A")
                 .replace("1ER", "1")
+                .replace("&", ";")
                 .trim();
     }
 
@@ -79,20 +118,12 @@ public class RoadSignDescCleaner {
                 .trim();
     }
 
-    private static @NotNull String reformatDailyTimeIntervals(@NotNull String description) {
-        String str = description;
-        str = reformatDailyTimeIntervals_1(str);
-        str = reformatDailyTimeIntervals_2(str);
-        str = reformatDailyTimeIntervals_3(str);
-        return str;
-    }
-
     /**
      * This method reformats the time range string in the description, handling different interval patterns.
      * It is used to fix intervals like:
-     * - "17H26 SAMEDI A 18H40 LUNDI" to something like "17H26-23H59 SAM; 00H00-23H59 DIM; 00H00-18H40 LUN".
+     * - "17H26 SAM A 18H40 LUN" to something like "17H26-23H59 SAM & 00H00-23H59 DIM & 00H00-18H40 LUN".
      * - "LUN 17H À MAR 17H - MER 17H À JEU 17H - VEN 17H À SAM 17H" to something like
-     * "17H-23H59 LUN; 00H00-17H MAR; 17H-23H59 MER; 00H00-17H JEU; 17H-23H59 VEN; 00H00-17H SAM".
+     * "17H-23H59 LUN & 00H00-17H MAR; 17H-23H59 MER; 00H00-17H JEU; 17H-23H59 VEN; 00H00-17H SAM".
      * <p>
      * Additionally, if a duration prefix is present like "120MIN", it will be distributed across each interval.
      * If the description contains a parking restriction prefix (`\P`),
@@ -102,7 +133,7 @@ public class RoadSignDescCleaner {
      * @return The description with the day-hour string reformatted.
      */
     private static @NotNull String reformatDailyTimeIntervals_1(@NotNull String description) {
-
+        String descCopy = description;
         boolean isParkingAuthorized = !description.startsWith("\\P");
 
         String durationPrefixPattern = "(\\d+\\s*MIN)(?:\\s*-\\s*)?";
@@ -110,10 +141,10 @@ public class RoadSignDescCleaner {
 
         String extractedDurationPrefix = "";
 
-        Matcher durationMatcher = durationPattern.matcher(description);
+        Matcher durationMatcher = durationPattern.matcher(descCopy);
         if (durationMatcher.find()) {
             extractedDurationPrefix = durationMatcher.group(1);
-            description = description.substring(durationMatcher.end()).trim();  // Remove the duration prefix from the description
+            descCopy = descCopy.substring(durationMatcher.end()).trim();  // Remove the duration prefix from the descCopy
         }
 
         String timePattern = "(\\d{1,2}\\s*H\\s*(?:\\d{1,2})?)";
@@ -122,8 +153,8 @@ public class RoadSignDescCleaner {
         String fullIntervalPattern1 = timePattern + "\\s*" + dayPattern + "\\s*(?:AU?)\\s*" + timePattern + "\\s*" + dayPattern;
         String fullIntervalPattern2 = dayPattern + "\\s*" + timePattern + "\\s*(?:À|A)\\s*" + dayPattern + "\\s*" + timePattern;
 
-        Matcher matcher1 = Pattern.compile(fullIntervalPattern1, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(description);
-        Matcher matcher2 = Pattern.compile(fullIntervalPattern2, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(description);
+        Matcher matcher1 = Pattern.compile(fullIntervalPattern1, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
+        Matcher matcher2 = Pattern.compile(fullIntervalPattern2, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
 
         Matcher selectedMatcher;
         boolean isPattern1Matched = matcher1.find();
@@ -135,7 +166,7 @@ public class RoadSignDescCleaner {
             return description;
         }
 
-        StringBuilder reformattedIntervals = new StringBuilder();
+        StringBuilder reformatted = new StringBuilder();
 
         do {
             String startDay, startTime, endDay, endTime;
@@ -153,45 +184,38 @@ public class RoadSignDescCleaner {
 
             List<String> daysInRange = getDaysInRange(startDay, endDay);
             for (int i = 0; i < daysInRange.size(); i++) {
-                reformattedIntervals.append(isParkingAuthorized ? " " : " \\P ");
+                if (!reformatted.isEmpty()) reformatted.append(RULE_SEPARATOR);
+
+                reformatted
+                        .append(isParkingAuthorized ? "" : "\\P ")
+                        .append(extractedDurationPrefix.isEmpty() ? "" : extractedDurationPrefix + " ");
+
                 if (i == 0) {
-                    reformattedIntervals
+                    reformatted
                             .append(startTime).append("-23H59 ")
                             .append(daysInRange.get(i));
                 } else if (i == daysInRange.size() - 1) {
-                    reformattedIntervals
+                    reformatted
                             .append("00H00-").append(endTime)
                             .append(" ").append(daysInRange.get(i));
                 } else {
-                    reformattedIntervals
+                    reformatted
                             .append("00H00-23H59 ")
                             .append(daysInRange.get(i));
                 }
-                reformattedIntervals.append(";");
             }
         } while (selectedMatcher.find());
 
-        String finalDescription = reformattedIntervals.toString().trim();
-        if (finalDescription.endsWith(";"))
-            finalDescription = finalDescription.substring(0, finalDescription.length() - 1);
-
-        if (!extractedDurationPrefix.isEmpty()) {
-            if (isParkingAuthorized) {
-                finalDescription = extractedDurationPrefix + " " + finalDescription.replaceAll("; ", "; " + extractedDurationPrefix + " ");
-            } else {
-                finalDescription = finalDescription.replace("\\P ", "\\P " + extractedDurationPrefix + " ");
-            }
-        }
-
+        String finalDescription = reformatted.toString().trim();
         return finalDescription.isEmpty() ? description : finalDescription;
     }
 
     /**
      * This helper method reformats a description string containing time intervals, day intervals, and month intervals.
      * It handles cases where the intervals are provided in a format like:
-     * - "\\P 23H30-00H30 MAR A MER; VEN A SAM 1 MARS AU 1 DEC"
+     * - "\P 23H30-00H30 MAR A MER; VEN A SAM 1 MARS AU 1 DEC"
      * The method will convert this to:
-     * "\\P 23H30-00H30 MAR A MER 1 MARS AU 1 DEC; \\P 23H30-00H30 VEN A SAM 1 MARS AU 1 DEC".
+     * "\P 23H30-00H30 MAR A MER 1 MARS AU 1 DEC & \P 23H30-00H30 VEN A SAM 1 MARS AU 1 DEC".
      * <p>
      * The method extracts the time intervals, day intervals, and month intervals, and ensures that they are correctly combined.
      * It also handles parking restriction prefixes (`\P`) and ensures that the prefix is applied consistently.
@@ -217,7 +241,7 @@ public class RoadSignDescCleaner {
 
         Matcher matcher = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
 
-        StringBuilder reformattedIntervals = new StringBuilder();
+        StringBuilder reformatted = new StringBuilder();
         String finalDescription = "";
 
         if (matcher.find()) {
@@ -227,17 +251,16 @@ public class RoadSignDescCleaner {
 
             for (String dayInt : dayIntervals.split(";")) {
                 dayInt = dayInt.trim();
-                reformattedIntervals
-                        .append(isParkingAuthorized ? " " : " \\P ")
+                if (!reformatted.isEmpty()) reformatted.append("; ");
+                reformatted
+                        .append(isParkingAuthorized ? "" : "\\P ")
                         .append(timeInterval).append(" ")
                         .append(dayInt).append(" ")
-                        .append(monthsInterval).append(";");
+                        .append(monthsInterval);
             }
-            finalDescription = reformattedIntervals.toString().trim();
-            if (finalDescription.endsWith(";"))
-                finalDescription = finalDescription.substring(0, finalDescription.length() - 1);
         }
 
+        finalDescription = reformatted.toString().trim();
         return (finalDescription.isEmpty()) ? description : finalDescription;
     }
 
@@ -245,9 +268,9 @@ public class RoadSignDescCleaner {
      * This method reformats a description string that contains time intervals, day intervals, and month intervals,
      * into a more detailed breakdown where each day in the interval is specified with its respective time and month range.
      * It handles cases such as:
-     * - "\\P 23H30-00H30 MAR A MER 1 MARS AU 1 DEC; \\P 23H30-00H30 VEN A SAM 1 MARS AU 1 DEC"
+     * - "\P 23H30-00H30 MAR A MER 1 MARS AU 1 DEC & \P 23H30-00H30 VEN A SAM 1 MARS AU 1 DEC"
      * The method will convert this to:
-     * "\\P 23H30-23H59 MAR 1 MARS AU 1 DEC; \\P 00H00-00H30 MER 1 MARS AU 1 DEC; \\P 23H30-23H59 VEN 1 MARS AU 1 DEC; \\P 00H00-00H30 SAM 1 MARS AU 1 DEC".
+     * "\P 23H30-23H59 MAR 1 MARS AU 1 DEC & \P 00H00-00H30 MER 1 MARS AU 1 DEC & \P 23H30-23H59 VEN 1 MARS AU 1 DEC & \P 00H00-00H30 SAM 1 MARS AU 1 DEC".
      * <p>
      * The method uses a helper method to initially process the input string into a more structured format,
      * and then further breaks down the intervals into individual days with accurate time intervals.
@@ -260,7 +283,7 @@ public class RoadSignDescCleaner {
         String desc = reformatDailyTimeIntervals_2_helper(description);
         if (desc.equalsIgnoreCase(description)) return description;
 
-        StringBuilder reformattedIntervals = new StringBuilder();
+        StringBuilder reformatted = new StringBuilder();
         String finalDescription = "";
 
         String timePattern = "\\d{1,2}\\s*H\\s*(?:\\d{1,2})?";
@@ -288,46 +311,45 @@ public class RoadSignDescCleaner {
 
                 List<String> daysInRange = getDaysInRange(startDay, endDay);
                 for (int i = 0; i < daysInRange.size(); i++) {
-                    reformattedIntervals.append(isParkingAuthorized ? " " : " \\P ");
+                    if (!reformatted.isEmpty()) reformatted.append(RULE_SEPARATOR);
+                    reformatted.append(isParkingAuthorized ? "" : "\\P ");
                     if (i == 0) {
-                        reformattedIntervals
+                        reformatted
                                 .append(startTime).append("-23H59 ")
                                 .append(daysInRange.get(i));
                     } else if (i == daysInRange.size() - 1) {
-                        reformattedIntervals
+                        reformatted
                                 .append("00H00-").append(endTime).append(" ")
                                 .append(daysInRange.get(i));
                     } else {
-                        reformattedIntervals
+                        reformatted
                                 .append("00H00-23H59 ")
                                 .append(daysInRange.get(i));
                     }
-                    reformattedIntervals.append(" ").append(monthInterval).append(";");
+                    reformatted.append(" ").append(monthInterval);
                 }
-                finalDescription = reformattedIntervals.toString().trim();
-                if (finalDescription.endsWith(";"))
-                    finalDescription = finalDescription.substring(0, finalDescription.length() - 1);
             }
         }
 
+        finalDescription = reformatted.toString().trim();
         return finalDescription.isEmpty() ? description : finalDescription;
     }
 
     /**
-     * This method reformats the time range string in the description, handling specific interval patterns.
+     * This method reformats the time range string in the description, separating patterns.
      * It is used to fix intervals like:
-     * - "8H À 12H LUN MER VEN 13H À 18H MAR JEU" to something like "8H-12H LUN; 8H-12H MER; 8H-12H VEN; 13H-18H MAR; 13H-18H JEU".
-     * - "MAR JEU 8H À 12H LUN MER VEN 14H À 17H" to something like "8H-12H MAR; 8H-12H JEU; 14H-17H LUN; 14H-17H MER; 14H-17H VEN".
+     * - "8H À 12H LUN MER VEN 13H À 18H MAR JEU" to something like "8H À 12H LUN MER VEN & 13H À 18H MAR JEU".
+     * - "MAR JEU 8H À 12H LUN MER VEN 14H À 17H" to something like "MAR JEU 8H À 12H & LUN MER VEN 14H À 17H".
+     * - "30 MIN - MAR MER VEN - 9H À 16H30 - LUN JEU - 12H À 16H30" to something like "30 MIN MAR MER VEN 9H À 16H30 & 30 MIN LUN JEU 12H À 16H30".
      * <p>
-     * Additionally, if a parking restriction prefix (`\P`) is present,
-     * it ensures that the prefix is correctly applied to each segment.
+     * Additionally, if a parking restriction prefix (`\P`) and/or duration prefix is present like "120MIN",
+     * it ensures that they are correctly applied to each pattern.
      *
      * @param description The original description.
-     * @return The description with the day-hour string reformatted.
+     * @return The reformatted description.
      */
     private static @NotNull String reformatDailyTimeIntervals_3(@NotNull String description) {
         String descCopy = description;
-        StringBuilder reformattedIntervals = new StringBuilder();
         boolean isParkingAuthorized = !descCopy.startsWith("\\P");
         descCopy = descCopy.replace("\\P", "").trim();
 
@@ -347,70 +369,23 @@ public class RoadSignDescCleaner {
         String timeRangePattern = "\\d{1,2}\\s*H\\s*(?:\\d{1,2})?\\s*(?:À|A)\\s*\\d{1,2}\\s*H\\s*(?:\\d{1,2})?";
         String dayPattern = "(?:(?:" + GlobalConfigs.WEEKLY_DAYS_PATTERN + ")\\s*)+";
 
+        String timeDayPattern = "(" + timeRangePattern + "\\s*" + dayPattern + ")";
+        String dayTimePattern = "(" + dayPattern + "\\s*" + timeRangePattern + ")";
 
-        String dayMonthPattern = GlobalConfigs.TWO_DIGIT + "\\s*(?:" + GlobalConfigs.ANNUAL_MONTH_PATTERN + ")";
-        String monthDayPattern = "(?:" + GlobalConfigs.ANNUAL_MONTH_PATTERN + ")\\s*" + GlobalConfigs.TWO_DIGIT;
-        String monthIntervalPattern = "((?:" + dayMonthPattern + "\\s*(?:AU?)\\s*" + dayMonthPattern + ")|(?:" + monthDayPattern + "\\s*(?:AU?)\\s*" + monthDayPattern + "))";
+        Matcher matcher = Pattern.compile(timeDayPattern + "|" + dayTimePattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
 
-
-        String timeDayPattern = "^(" + timeRangePattern + ")\\s*(" + dayPattern + ")\\s*(?:-|" + monthIntervalPattern + ")?\\s*";
-        String dayTimePattern = "^(" + dayPattern + ")\\s*(" + timeRangePattern + ")\\s*(?:-|" + monthIntervalPattern + ")?\\s*";
-
-        while (!descCopy.isEmpty()) {
-            Matcher timeDayMatcher = Pattern.compile(timeDayPattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
-            Matcher dayTimeMatcher = Pattern.compile(dayTimePattern, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE).matcher(descCopy);
-
-            if (timeDayMatcher.find()) {
-                String monthInterval = null;
-                if (timeDayMatcher.group(3) != null)
-                    monthInterval = timeDayMatcher.group(3);
-                processMatchedInterval(reformattedIntervals, isParkingAuthorized, timeDayMatcher.group(1), timeDayMatcher.group(2), monthInterval);
-                descCopy = descCopy.substring(timeDayMatcher.end()).trim();
-            } else if (dayTimeMatcher.find()) {
-                String monthInterval = null;
-                if (dayTimeMatcher.group(3) != null)
-                    monthInterval = dayTimeMatcher.group(3);
-                processMatchedInterval(reformattedIntervals, isParkingAuthorized, dayTimeMatcher.group(2), dayTimeMatcher.group(1), monthInterval);
-                descCopy = descCopy.substring(dayTimeMatcher.end()).trim();
-            } else { // No more patterns matched, exit loop
-                break;
-            }
+        StringBuilder reformatted = new StringBuilder();
+        while (matcher.find()) {
+            if (!reformatted.isEmpty()) reformatted.append(RULE_SEPARATOR);
+            reformatted
+                    .append(isParkingAuthorized ? "" : "\\P ")
+                    .append(extractedDurationPrefix.isEmpty() ? "" : extractedDurationPrefix + " ")
+                    .append(matcher.group().trim());
         }
 
-        String finalDescription = reformattedIntervals.toString().trim();
-        // Apply the duration prefix to each interval if it was extracted
-        if (!extractedDurationPrefix.isEmpty()) {
-            StringBuilder updatedDescription = new StringBuilder();
-            for (String segment : finalDescription.split("; ")) {
-                if (segment.startsWith("\\P"))
-                    updatedDescription.append(segment.replace("\\P", "\\P " + extractedDurationPrefix)).append("; ");
-                else
-                    updatedDescription.append(extractedDurationPrefix + " ").append(segment).append("; ");
-            }
-            finalDescription = updatedDescription.toString().trim();
-            if (finalDescription.endsWith(";"))
-                finalDescription = finalDescription.substring(0, finalDescription.length() - 1);
-        }
-
-        return finalDescription.isEmpty() ? description : finalDescription;
+        return reformatted.isEmpty() ? description : reformatted.toString().trim();
     }
 
-    private static void processMatchedInterval(StringBuilder reformattedIntervals, boolean isParkingAuthorized,
-                                               String timeRange, String dayString, String monthInterval) {
-        timeRange = timeRange.replaceAll("\\s+", "").replaceAll("A|À", "-");
-        String[] days = dayString.split("\\s+");
-        for (String day : days) {
-            if (!reformattedIntervals.isEmpty())
-                reformattedIntervals.append(isParkingAuthorized ? "; " : "; \\P ");
-            else
-                reformattedIntervals.append(isParkingAuthorized ? "" : "\\P ");
-
-            reformattedIntervals
-                    .append(timeRange)
-                    .append(" ").append(day)
-                    .append(monthInterval != null ? " " + monthInterval : "");
-        }
-    }
 
     private static @NotNull List<String> getDaysInRange(@NotNull String startDay, @NotNull String endDay) {
         List<String> daysOfWeek = Arrays.asList("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM");
