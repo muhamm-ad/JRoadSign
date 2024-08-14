@@ -1,5 +1,7 @@
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalFunctions;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +48,17 @@ public class RpaSignDesc {
     public String toString() {
         return "RpaSignDesc{" +
                 "strDescription='" + strDescription + '\'' +
+                ", strDescriptionCleaned='" + strDescriptionCleaned + '\'' +
                 ", rpaSignDescRules=" + rpaSignDescRules +
                 '}';
+    }
+
+    public String toJson() {
+        return "{" +
+                "\"strDescription\": \"" + strDescription.replace("\\P", "\\\\P").replace("\\p", "\\\\p") + "\"" +
+                ",\"strDescriptionCleaned\": \"" + strDescriptionCleaned.replace("\\P", "\\\\P") + "\"" +
+                ",\"rpaSignDescRules\": " + GlobalFunctions.getJsonList(rpaSignDescRules, RpaSignDescRule::toJson) +
+                "}";
+
     }
 }

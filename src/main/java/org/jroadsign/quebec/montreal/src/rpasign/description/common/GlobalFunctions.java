@@ -1,6 +1,8 @@
 package org.jroadsign.quebec.montreal.src.rpasign.description.common;
 
 import java.time.DayOfWeek;
+import java.util.List;
+import java.util.function.Function;
 
 public class GlobalFunctions {
 
@@ -36,6 +38,40 @@ public class GlobalFunctions {
             case GlobalConfigs.SUNDAY -> DayOfWeek.SUNDAY;
             default -> throw new IllegalStateException("Unknown day abbreviation: " + sDayAbbr);
         };
+    }
+
+
+    /**
+     * Returns a JSON array string representation of the given list.
+     *
+     * @param <T>           the type of elements in the list
+     * @param list          the list to convert to JSON string
+     * @param tostrFunction the function used to convert each element in the list to a string representation
+     * @return a JSON array string representation of the given list
+     */
+    public static <T> String getJsonList(List<T> list, Function<T, String> tostrFunction) {
+        StringBuilder jsonList = new StringBuilder();
+        for (T iter : list) {
+            if (!jsonList.isEmpty()) jsonList.append(",");
+            jsonList.append(tostrFunction.apply(iter));
+        }
+        return "[" + jsonList + "]";
+    }
+
+    /**
+     * Converts a given list to a JSON-formatted string representation.
+     *
+     * @param list the list to convert to JSON
+     * @param <T>  the type of elements in the list
+     * @return a JSON-formatted string representation of the list
+     */
+    public static <T> String getJsonList(List<T> list) {
+        StringBuilder jsonList = new StringBuilder();
+        for (T iter : list) {
+            if (!jsonList.isEmpty()) jsonList.append(",");
+            jsonList.append(iter.toString());
+        }
+        return "[" + jsonList + "]";
     }
 
 }

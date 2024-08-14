@@ -99,4 +99,8 @@ public class DailyTimeRange {
     public String toString() {
         return "DailyTimeRange" + range;
     }
+
+    public String toJson() {
+        return "{\"start\": \"" + range.getStart() + "\", \"end\": \"" + range.getEnd() + "\"}";
+    }
 }

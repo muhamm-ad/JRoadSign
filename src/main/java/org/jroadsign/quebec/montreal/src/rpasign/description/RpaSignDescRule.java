@@ -1,13 +1,15 @@
 package org.jroadsign.quebec.montreal.src.rpasign.description;
 
 import org.jetbrains.annotations.NotNull;
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalConfigs;
+import org.jroadsign.quebec.montreal.src.rpasign.description.common.GlobalFunctions;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.StartAfterEndException;
 import org.jroadsign.quebec.montreal.src.rpasign.description.exceptions.WeeklyRangeExpException;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.MonthDay;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,22 +21,22 @@ public class RpaSignDescRule {
     private static final LocalTime END_OF_DAY_HOUR = LocalTime.of(23, 59);
 
     private boolean parkingAuthorized;
-    private List<DurationMinutes> listDurationMinutes;
-    private List<DailyTimeRange> listDailyTimeRange;
-    private WeeklyDays weeklyDays;
-    private List<AnnualMonthRange> listAnnualMonthRange;
-    private String additionalMetaData;
+    private List<DurationMinutes> listDurationMinutes = new ArrayList<>();
+    private List<DailyTimeRange> listDailyTimeRange = new ArrayList<>();
+    private List<DayOfWeek> listDay = new ArrayList<>();
+    private List<AnnualMonthRange> listAnnualMonthRange = new ArrayList<>();
+    private String additionalMetaData = "";
 
     public RpaSignDescRule(boolean parkingAuthorized,
                            List<DurationMinutes> listDurationMinutes,
                            List<DailyTimeRange> listDailyTimeRange,
-                           WeeklyDays weeklyDays,
+                           WeeklyDays listDay,
                            List<AnnualMonthRange> listAnnualMonthRange,
                            String additionalMetaData) {
         this.parkingAuthorized = parkingAuthorized;
         this.listDurationMinutes = listDurationMinutes;
         this.listDailyTimeRange = listDailyTimeRange;
-        this.weeklyDays = weeklyDays;
+        this.listDay = listDay.getDays().stream().toList();
         this.listAnnualMonthRange = listAnnualMonthRange;
         this.additionalMetaData = additionalMetaData;
     }
@@ -45,14 +47,13 @@ public class RpaSignDescRule {
         this.parkingAuthorized = rpaSignDescParser.isParkingAuthorized();
         initDurationMinutesList(rpaSignDescParser);
         initDailyTimeRangeList(rpaSignDescParser);
-        initWeeklyDays(rpaSignDescParser);
+        initListDay(rpaSignDescParser);
         initAnnualMonthRangeList(rpaSignDescParser);
         initAdditionnalInfo(rpaSignDescParser);
     }
 
     private void initDurationMinutesList(@NotNull RpaSignDescParser rpaSignDescParser) {
         if (rpaSignDescParser.getDurationMinutes() != null) {
-            listDurationMinutes = new ArrayList<>();
             String[] tabDurationsMinutes = rpaSignDescParser.getDurationMinutes().split(";");
             for (String element : tabDurationsMinutes)
                 listDurationMinutes.add(new DurationMinutes(element.trim()));
@@ -61,8 +62,6 @@ public class RpaSignDescRule {
 
     private void initDailyTimeRangeList(@NotNull RpaSignDescParser rpaSignDescParser) {
         if (rpaSignDescParser.getDailyTimeRange() != null) {
-            listDailyTimeRange = new ArrayList<>();
-
             for (String s : rpaSignDescParser.getDailyTimeRange().split(";")) {
                 try {
                     listDailyTimeRange.add(new DailyTimeRange(s));
@@ -85,13 +84,13 @@ public class RpaSignDescRule {
         }
     }
 
-    private void initWeeklyDays(@NotNull RpaSignDescParser rpaSignDescParser) {
+    private void initListDay(@NotNull RpaSignDescParser rpaSignDescParser) {
         try {
             if (rpaSignDescParser.getWeeklyDayRange() != null) {
-                weeklyDays = new WeeklyDays(rpaSignDescParser.getWeeklyDayRange());
+                listDay = new WeeklyDays(rpaSignDescParser.getWeeklyDayRange()).getDays().stream().toList();
             }
         } catch (WeeklyRangeExpException e1) {
-            weeklyDays = e1.getWeeklyDays();
+            listDay = e1.getWeeklyDays().getDays().stream().toList();
             if (Objects.requireNonNull(e1.getExpression()) == WeekRangeExpression.ALL_TIMES_EXCEPT) {
                 this.parkingAuthorized = true;
             }
@@ -100,8 +99,6 @@ public class RpaSignDescRule {
 
     private void initAnnualMonthRangeList(@NotNull RpaSignDescParser rpaSignDescParser) {
         if (rpaSignDescParser.getAnnualMonthRange() != null) {
-            listAnnualMonthRange = new ArrayList<>();
-
             for (String s : rpaSignDescParser.getAnnualMonthRange().split(";")) {
                 try {
                     listAnnualMonthRange.add(new AnnualMonthRange(s));
@@ -143,19 +140,19 @@ public class RpaSignDescRule {
     }
 
     public List<DurationMinutes> getListDurationMinutes() {
-        return listDurationMinutes != null ? listDurationMinutes : Collections.emptyList();
+        return listDurationMinutes;
     }
 
     public List<DailyTimeRange> getListDailyTimeRange() {
-        return listDailyTimeRange != null ? listDailyTimeRange : Collections.emptyList();
+        return listDailyTimeRange;
     }
 
-    public WeeklyDays getWeeklyDays() {
-        return weeklyDays;
+    public List<DayOfWeek> getListDay() {
+        return listDay;
     }
 
     public List<AnnualMonthRange> getListAnnualMonthRange() {
-        return listAnnualMonthRange != null ? listAnnualMonthRange : Collections.emptyList();
+        return listAnnualMonthRange;
     }
 
     public String getAdditionalMetaData() {
@@ -168,9 +165,28 @@ public class RpaSignDescRule {
                 "parkingAuthorized=" + parkingAuthorized +
                 ", listDurationMinutes=" + listDurationMinutes +
                 ", listDailyTimeRange=" + listDailyTimeRange +
-                ", weeklyDays=" + weeklyDays +
+                ", listDay=" + listDay +
                 ", listAnnualMonthRange=" + listAnnualMonthRange +
                 ", additionalMetaData='" + additionalMetaData + '\'' +
+                '}';
+    }
+
+    private String getJsonListDay() {
+        return GlobalFunctions.getJsonList(
+                listDay.stream().map(day -> "\"" + GlobalConfigs.DAY_OF_WEEK_ABREVIATIONS_MAP.get(day) + "\"").toList(),
+                String::valueOf
+        );
+    }
+
+
+    public String toJson() {
+        return "{" +
+                "\"parkingAuthorized\": " + parkingAuthorized +
+                ",\"listDurationMinutes\": " + GlobalFunctions.getJsonList(listDurationMinutes, duration -> Integer.toString(duration.getDuration())) +
+                ",\"listDailyTimeRange\": " + GlobalFunctions.getJsonList(listDailyTimeRange, DailyTimeRange::toJson) +
+                ",\"listDay\": " + getJsonListDay() +
+                ",\"listAnnualMonthRange\": " + GlobalFunctions.getJsonList(listAnnualMonthRange, AnnualMonthRange::toJson) +
+                ",\"additionalMetaData\": \"" + additionalMetaData + "\"" +
                 '}';
     }
 }

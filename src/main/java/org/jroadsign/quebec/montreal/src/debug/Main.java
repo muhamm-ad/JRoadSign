@@ -17,6 +17,8 @@ public class Main {
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
     private static final String FILTERED_FILE = "src/main/resources/quebec/montreal/input/Filtered_TypeS_RoadSign.geojson";
     private static final File OUTPUT_DIR = new File("src/main/resources/quebec/montreal/output");
+    private static final String SORT_UNIQ_SCRIPT_FILE = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
+
 
     private static SortedMap<Long, RoadSign> prepareRoadSignData() {
         MontrealRoadPostSignsGeojsonReader montrealRoadPostSignsGeojsonReader =
@@ -79,23 +81,14 @@ public class Main {
                 StringBuilder additionalInfos = new StringBuilder();
                 StringBuilder durationMinutes = new StringBuilder();
                 StringBuilder dailyTimeRanges = new StringBuilder();
-                StringBuilder weeklyDays = new StringBuilder();
+                StringBuilder days = new StringBuilder();
                 StringBuilder annualMonthRanges = new StringBuilder();
 
                 for (RpaSignDescRule rule : rpaSign.getDescription().getRpaSignDescRules()) {
-                    durationMinutes.append(
-                            rule.getListDurationMinutes() == null || rule.getListDurationMinutes().isEmpty() ?
-                                    "" : rule.getListDurationMinutes() + ";");
-                    dailyTimeRanges.append(
-                            rule.getListDailyTimeRange() == null || rule.getListDailyTimeRange().isEmpty() ?
-                                    "" : rule.getListDailyTimeRange() + ";");
-                    weeklyDays.append(
-                            rule.getWeeklyDays() == null || rule.getWeeklyDays().isEmpty() ?
-                                    "" : rule.getWeeklyDays() + ";");
-                    annualMonthRanges.append(
-                            rule.getListAnnualMonthRange() == null || rule.getListAnnualMonthRange().isEmpty() ?
-                                    "" : rule.getListAnnualMonthRange() + ";");
-
+                    durationMinutes.append(rule.getListDurationMinutes().isEmpty() ? "" : rule.getListDurationMinutes() + ";");
+                    dailyTimeRanges.append(rule.getListDailyTimeRange().isEmpty() ? "" : rule.getListDailyTimeRange() + ";");
+                    days.append(rule.getListDay().isEmpty() ? "" : rule.getListDay() + ";");
+                    annualMonthRanges.append(rule.getListAnnualMonthRange().isEmpty() ? "" : rule.getListAnnualMonthRange() + ";");
                     additionalInfos.append(rule.getAdditionalMetaData() == null ? "" : rule.getAdditionalMetaData() + ";");
                 }
 
@@ -107,9 +100,9 @@ public class Main {
                     writer_dailyTimeRanges.write(rpaCode + "\t==>\t");
                     writer_dailyTimeRanges.write(dailyTimeRanges + "\n");
                 }
-                if (!weeklyDays.isEmpty() && weeklyDays.toString().split(";").length > 1) {
+                if (!days.isEmpty() && days.toString().split(";").length > 1) {
                     writer_weeklyDays.write(rpaCode + "\t==>\t");
-                    writer_weeklyDays.write(weeklyDays + "\n");
+                    writer_weeklyDays.write(days + "\n");
                 }
                 if (!annualMonthRanges.isEmpty() && annualMonthRanges.toString().split(";").length > 1) {
                     writer_annualMonthRanges.write(rpaCode + "\t==>\t");
@@ -124,85 +117,61 @@ public class Main {
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }
-        // Define script path and arguments
-        String scriptPath = "src/main/java/org/jroadsign/quebec/montreal/src/debug/sort_and_uniq.sh";
-        String targetFiles_RpaSignRules = "src/main/resources/quebec/montreal/output/RpaSignRule_*.txt";
-        String targetFiles_strDescriptions = "src/main/resources/quebec/montreal/output/strDescription*.txt";
 
-        // Execute the script with arguments
-        executeScript(scriptPath, targetFiles_RpaSignRules);
-        executeScript(scriptPath, targetFiles_strDescriptions);
+        executeScript(SORT_UNIQ_SCRIPT_FILE, "src/main/resources/quebec/montreal/output/RpaSignRule_*.txt");
+        executeScript(SORT_UNIQ_SCRIPT_FILE, "src/main/resources/quebec/montreal/output/strDescription*.txt");
     }
 
-    private static String formatLineRpaSign(String lineOfRpaSign) {
-        return lineOfRpaSign
-                .replace("id", "\n\tid")
-                .replace("description", "\n\tdescription")
-                .replace("strDescription", "\n\t\tstrDescription")
-
-                .replace("rpaSignDescRules", "\n\t\trpaSignDescRules")
-                .replace("[RpaSignDescRule", "[\n\t\t\tRpaSignDescRule")
-                .replace("}, RpaSignDescRule", "\n\t\t\t},\n\t\t\tRpaSignDescRule")
-
-                .replace("listDurationMinutes", "\n\t\t\t\tlistDurationMinutes")
-                .replace("parkingAuthorized", "\n\t\t\t\tparkingAuthorized")
-                .replaceAll("(?<!list)DurationMinutes", "\n\t\t\t\t\t\tDurationMinutes")
-                .replace("listDailyTimeRange", "\n\t\t\t\tlistDailyTimeRange")
-                .replaceAll("(?<!list)DailyTimeRange", "\n\t\t\t\t\t\tDailyTimeRange")
-                .replace("weeklyDayss", "\n\t\t\t\tweeklyDayss")
-                .replace("listAnnualMonthRange", "\n\t\t\t\tlistAnnualMonthRange")
-                .replaceAll("(?<!list)AnnualMonthRange", "\n\t\t\t\t\t\tAnnualMonthRange")
-                .replace("additionalMetaData", "\n\t\t\t\tadditionalMetaData")
-                .replace("}, code", "\n\t},\n\tcode")
-
-                .replace("'}", "'\n}")
-                .replace("],", "\n\t\t\t\t],")
-                .replace("{", " {")
-                .replace("}]", "\t\t\t}\n\t\t]")
-                .replace("RpaSign{", "],\nRpaSign{")
-
-                .replace("'null'", "null");
-    }
-
-    private static void debugRpaSign_file(SortedMap<Long, RoadSign> roadSigns) {
+    private static void debugRoadSigns(SortedMap<Long, RoadSign> roadSigns) {
+        String out_json = "RoadSigns.json";
         try (
-                // BufferedWriter writerRoadSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RoadSigns.txt")));
-                BufferedWriter writerRpaSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, "RpaSigns.txt")));
+                BufferedWriter writerRpaSigns = new BufferedWriter(new FileWriter(new File(OUTPUT_DIR, out_json)));
         ) {
+            writerRpaSigns.write("{ \"RoadSigns\" : [");
             for (RoadSign s : roadSigns.values()) {
-                // if (s.getRpaSign().getStringCode().equalsIgnoreCase("SV-QA")) { // Filter
-                // writerRoadSigns.write(s + "\n");
                 RpaSign rpaSign = s.getRpaSign();
-                writerRpaSigns.write(formatLineRpaSign(rpaSign.toString()) + "\n");
-                // }
+                /*
+                RpaSignDesc rpaSignDesc = rpaSign.getDescription();
+                List<RpaSignDescRule> rules = rpaSignDesc.getRpaSignDescRules();
+                RpaSignDescRule rule = rules.get(0);
+                if (rules.size() > 1
+                        && !rule.getListDurationMinutes().isEmpty()
+                        && !rule.getListDailyTimeRange().isEmpty()
+                        && !rule.getListDay().isEmpty()
+                        && !rule.getListAnnualMonthRange().isEmpty()
+                ) // Filter
+                */
+                writerRpaSigns.write(rpaSign.toJson() + ",\n");
             }
+            writerRpaSigns.write("]}");
         } catch (IOException e) {
             LOGGER.severe("Error writing to output file: " + e.getMessage());
         }
+
+        executeScript(SORT_UNIQ_SCRIPT_FILE, out_json);
     }
 
-    private static void debugRpaSign_stdout(SortedMap<Long, RoadSign> roadSigns) {
+    private static void debugRpaSign(SortedMap<Long, RoadSign> roadSigns) {
         Scanner scanner = new Scanner(System.in);
-
         while (true) {
-            System.out.print("Enter the code to search for (e.g., SV-QA) or type 'exit' to quit: ");
+            System.out.print("Enter the code to search for sign (e.g., SV-QA) or type 'exit' to quit: ");
             String searchCode = scanner.nextLine().trim();
 
-            if (searchCode.equalsIgnoreCase("exit")) {
-                break;
-            }
+            if (searchCode.equalsIgnoreCase("exit")) break;
 
             List<RoadSign> matchingRoadSigns = roadSigns.values().stream()
                     .filter(s -> s.getRpaSign().getCode().getStr().equalsIgnoreCase(searchCode))
+                    .distinct()
                     .collect(Collectors.toList());
 
             if (matchingRoadSigns.isEmpty()) {
                 System.err.println("No road signs found with the code: " + searchCode);
             } else {
+                System.out.print("{\"" + searchCode + "\" : [");
                 for (RoadSign s : matchingRoadSigns) {
-                    RpaSign rpaSign = s.getRpaSign();
-                    System.out.println(formatLineRpaSign(rpaSign.toString()));
+                    System.out.print(s.getRpaSign().toJson() + ",\n");
                 }
+                System.out.print("]}");
             }
         }
     }
@@ -214,10 +183,10 @@ public class Main {
 
         SortedMap<Long, RoadSign> roadSigns = prepareRoadSignData();
 
-        debugRpaSignRules(roadSigns);
-        debugRpaSign_file(roadSigns);
+        // debugRpaSignRules(roadSigns);
+        debugRoadSigns(roadSigns);
 
-        // debugRpaSign_stdout(roadSigns);
+        // debugRpaSign(roadSigns);
     }
 
 }

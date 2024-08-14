@@ -101,4 +101,7 @@ public class AnnualMonthRange {
         return "AnnualMonthRange" + range;
     }
 
+    public String toJson() {
+        return "{\"start\": \"" + range.getStart() + "\", \"end\": \"" + range.getEnd() + "\"}";
+    }
 }
