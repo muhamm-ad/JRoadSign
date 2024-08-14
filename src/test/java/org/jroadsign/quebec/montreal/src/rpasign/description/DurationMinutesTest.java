@@ -20,7 +20,7 @@ public class DurationMinutesTest {
 
     @Test
     public void testInvalidDurationFormat() {
-        assertThrows(NullPointerException.class, () -> new DurationMinutes(null));
+        assertThrows(IllegalArgumentException.class, () -> new DurationMinutes(null));
         assertThrows(IllegalArgumentException.class, () -> new DurationMinutes(""));
         assertThrows(IllegalArgumentException.class, () -> new DurationMinutes(" "));
         assertThrows(IllegalArgumentException.class, () -> new DurationMinutes("null"));

@@ -101,7 +101,7 @@ public class MontrealRoadPostSignsGeojsonReader {
         // if ((!signDescRpa.startsWith("PANONCEAU")) &&
         //         (signRepDescription.equalsIgnoreCase("Réel") ||
         //                 signRepDescription.equalsIgnoreCase("En conception"))) {
-        RpaSign signRpa = new RpaSign(signIdRpa, signDescRpa, signCodeRpa);
+        RpaSign signRpa = new RpaSign(signIdRpa, signCodeRpa, signDescRpa);
 
         RoadSign roadSign = new RoadSign(signPosition, signId, signRpa, signArrowCode,
                 signToponymic, signCategoryDescription, signRepDescription);

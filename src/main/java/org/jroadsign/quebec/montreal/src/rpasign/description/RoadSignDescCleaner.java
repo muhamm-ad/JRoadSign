@@ -35,7 +35,7 @@ public class RoadSignDescCleaner {
             cleanedDescription = "\\P " + cleanedDescription;
         }
 
-        for (Map.Entry<String, String> entry : GlobalConfigs.WEEKLY_DAYS_ABBREVIATIONS_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : GlobalConfigs.DAY_OF_WEEK_PATTERN_MAP.entrySet()) {
             String abbreviation = entry.getValue().trim();
             cleanedDescription = cleanedDescription.replaceAll(entry.getKey(), abbreviation).trim();
         }
