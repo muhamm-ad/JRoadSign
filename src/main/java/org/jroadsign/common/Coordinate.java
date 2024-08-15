@@ -1,12 +1,15 @@
 package org.jroadsign.common;
 
+import org.json.JSONObject;
+
 import java.awt.geom.Point2D;
 import java.io.*;
 import java.util.Objects;
 
 /**
- * This class encapsulates a Point2D.Double and provide access
- * via <tt>lat</tt> and <tt>lon</tt>.
+ * @author - <a href="https://github.com/muhamm-ad">muhamm-ad</a>
+ * @project JRoadSign
+ * @description Encapsulates a Point2D.Double and provide access via <tt>lat</tt> and <tt>lon</tt>.
  */
 public class Coordinate implements Serializable, Comparable<Coordinate> {
     private transient Point2D.Double data;
@@ -110,4 +113,10 @@ public class Coordinate implements Serializable, Comparable<Coordinate> {
         return "Coordinate[" + data.y + ", " + data.x + "]";
     }
 
+    public JSONObject toJson() {
+        JSONObject json = new JSONObject();
+        json.put("latitude", getLat());
+        json.put("longitude", getLon());
+        return json;
+    }
 }

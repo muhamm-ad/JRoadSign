@@ -2,7 +2,9 @@
 
 ## Overview
 
-**JRoadSign** is an Java library tailored for representing and processing road signs as Java objects. It enables the transformation of road sign data from various formats into structured Java objects, offering a flexible and powerful interface for managing road sign information in diverse Java applications.
+**JRoadSign** is a Java library tailored for representing and processing road signs as Java objects. It enables the
+transformation of road sign data from various formats into structured Java objects, offering a flexible and powerful
+interface for managing road sign information in diverse Java applications.
 
 ## Features
 
@@ -14,7 +16,8 @@
 
 Currently, **JRoadSign** includes modules for the following city:
 
-- Montreal (under `quebec/montreal`) - Data sourced from GeoJSON files.
+- [Montreal](docs/canada/quebec/montreal) - Data sourced from GeoJSON or CSV files
+  from [Montreal Open Data](https://donnees.montreal.ca/dataset/).
 
 Future expansions are planned to include additional cities with varying data sources and structures.
 
@@ -26,26 +29,29 @@ Future expansions are planned to include additional cities with varying data sou
 
 ### Installation and Usage
 
-1. **Module Integration**: Add the `JRoadSign` module to your Java project. For specific city data, import the respective city sub-module (e.g., `quebec/montreal`).
+1. **Module Integration**: Add the `JRoadSign` module to your Java project. For specific city data, import the
+   respective city sub-module (e.g., `canada/quebec/montreal`).
 2. **Data Interaction**: Use the provided functions within each sub-module to load and interact with road sign data, tailored to the data format and structure specific to that city.
 
 #### Example
 
 ```java
-// Example for Montreal
-import org.JRoadSign.quebec.montreal;
+import org.jroadsign.canada.quebec.montreal.RoadParkingSign;
 
-// Load Montreal road sign data
-List<RoadSign> montrealRoadSigns = montreal.loadDataFunction("path_to_your_file");
+// Load Montreal parking road sign data
+RoadParkingSign roadParkingSign = new RoadParkingSign("path_to_your_file.geojson");
 ```
 
 ## Contributing
 [//]: # (TODO : add contributing guidelines files in docs)
-Contributions to JRoadSign are highly appreciated. You can contribute in various ways, including reporting bugs, suggesting improvements, or adding new city modules. Feel free to open issues or submit pull requests on our GitHub repository.
+Contributions to JRoadSign are highly appreciated.
+You can contribute in various ways, including reporting bugs, suggesting improvements, or adding new city modules, or
+documentation.
+Feel free to open issues or submit pull requests on our GitHub repository.
 
-## Built With
+[//]: # (## Built With)
 
-- [Maven](https://maven.apache.org/) - Dependency management and build automation.
+[//]: # (- [Maven]&#40;https://maven.apache.org/&#41; - Dependency management and build automation.)
 
 ## Authors
 
