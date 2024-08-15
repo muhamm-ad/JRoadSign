@@ -158,8 +158,6 @@ public class Main {
         File outJsonFile = new File(OUTPUT_DIR, "RoadPosts.json");
         try (BufferedWriter writerRpaSigns = new BufferedWriter(new FileWriter(outJsonFile))) {
 
-            JSONObject outJson = new JSONObject();
-
             JSONObject manifest = new JSONObject();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String currentDateTime = LocalDateTime.now().format(formatter);
@@ -171,10 +169,8 @@ public class Main {
             manifest.put("description", "This file contains road posts description rules");
 
             JSONObject roadPosts = roadParkingSign.toJson();
-
-            outJson.put("manifest", manifest);
-            outJson.put("roadPosts", roadPosts);
-            writerRpaSigns.write(outJson.toString(2));
+            roadPosts.put("manifest", manifest);
+            writerRpaSigns.write(roadPosts.toString(2));
 
         } catch (IOException e) {
             LOGGER.severe("Error writing to an output file: " + e.getMessage());
@@ -220,7 +216,7 @@ public class Main {
         debugRoadPosts(roadParkingSign);
         debugRoadSigns(roadParkingSign);
 
-        debugRpaSignRules(roadSigns);
+        // debugRpaSignRules(roadSigns);
         // debugRpaSign(roadSigns);
     }
 

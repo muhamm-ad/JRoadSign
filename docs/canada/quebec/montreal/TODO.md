@@ -23,4 +23,3 @@
 - [ ] **Task**: Verify parsing of 'DAY-DAY'.
     - **Action**: For sign SB-TU-LM, check if the 'DAY-DAY' is correctly parsed.
     - **Example of signs (code)** : SB-TU-LM, SB-TU-MJ, SB-TU-MV
-- [ ] 
